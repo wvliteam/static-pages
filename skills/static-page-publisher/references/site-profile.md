@@ -19,4 +19,4 @@
 
 若在其他仓库使用此 skill，需要明确配置相同预览机制，或采用实际可用的预览提供商。不要误以为新建 preview 分支后 GitHub 就会自动产生预览网址。
 
-技能与站点分开：`skills/static-page-publisher/` 只作版本管理，部署只读取 main/docs 及符合条件的 PR public 目录。不要将 skill 放进 docs 或 public。
+技能与站点分开：`skills/static-page-builder/` 和 `skills/static-page-publisher/` 只作版本管理，部署只读取 main/docs 及符合条件的 PR public 目录。不要将 skill 放进 docs 或 public。

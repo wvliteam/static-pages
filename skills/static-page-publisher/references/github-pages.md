@@ -12,9 +12,9 @@
 
 1. 保留用户改动，从最新 main 创建 preview/<task> 分支，必要时使用隔离检出；不 force push、不 reset 用户文件。
 2. 源数据、检查日志和截图放在忽略的 scratch/。可审阅网页位于 artifacts/<task>/public/，目录内使用相对资源；HTML 本身保存干净版本，预览标记由部署注入。
-3. 本地检查页面。只显式暂存该任务所需的 HTML 和静态资源；不改正式首页或正式页数量。推送分支、创建同仓库 PR 指向 main，获取 PR 编号。
+3. 接收已有产物与本地检查结果；页面制作或本地结构问题由创建器处理。只显式暂存该任务所需的 HTML 和静态资源，不改正式首页或正式页数量。推送分支、创建同仓库 PR 指向 main，获取 PR 编号。
 4. 等待本次 Pages workflow；从 Actions 摘要或 deployment.json 获取真实预览链接。不要仅凭推测路径声称上线。
-5. 核对 deployment.json 的 PR head_sha 等于本次源提交，下载预览 HTML，核对它与部署记录的 SHA-256 一致，检查可见预览标记。正式页面的哈希应仍等于 main/docs 文件。
+5. 用 `scripts/verify_deployment.py` 核对 deployment.json 的 PR head_sha 等于本次源提交，并核对预览生成文件的 SHA-256。浏览器打开后可确认可见预览标记；页面内容和交互检查归创建器。正式页面的哈希应仍等于 main/docs 文件。
 
 预览任务缺 index.html 时可显示为尚未就绪，不应破坏正式站点。文件过大、路径越界或符号链接被拒绝时先修复文件，勿绕过验证。
 

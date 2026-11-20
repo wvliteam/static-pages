@@ -1,23 +1,17 @@
 ---
 name: static-page-publisher
-description: "把分析、报告或小工具分阶段制作成静态 HTML，核对数据与交互，通过 GitHub Pages 提供 PR 分支预览，确认后合入统一站点正式发布。适用于页面创建、更新、归档、预览与部署验收；不用于后端部署。"
+description: "接收已有静态 HTML 产物，按统一仓库规则准备预览分支与PR，验证 GitHub Pages 在线预览，在当前版本获确认后归档、合并、部署并清理预览。适用于上传、在线预览、正式发布及部署验收；页面制作与本地布局检查由创建技能处理。"
 ---
 
-# 静态页面创建与发布
+# 静态页面预览与发布
 
-先交付可在线审阅的预览版本，再按当前任务授权正式收录。所有页面复用用户指定的统一仓库，不逐页建仓库。此技能不授权向任意账号上传或合并；按会话和仓库规则判断授权。
+接收已有 HTML 目录，完成在线预览、正式收录和部署核对。按会话授权执行上传或合并；预览不自动等于正式发布许可。复用用户指定统一仓库，不逐页建仓库。
 
-## 创建页面
+## 输入与交接
 
-需要建页时读取 [references/page-creation.md](references/page-creation.md)。按以下阶段落盘，每阶段更新可打开的 HTML，不要求阶段间暂停确认：
+确定产物目录、入口 HTML、必要资源、相关数据日期和已完成的本地检查。已有网页可直接发布，不要求重新创作或刷新其分析数据。
 
-1. 页面结构和视觉样式。
-2. 已核验内容、数据和图表。
-3. 交互、关键数值、布局和键盘检查。
-
-使用实际存在的技术栈；原生静态页默认可用 HTML/CSS/JavaScript。若可用，先读取 `ui-ux-pro-max`，按其流程生成并核对设计系统；结果不适合产品时不要盲目套用。优先自包含 HTML 或同目录静态资源，不为单页引入不必要的框架和远程字体。
-
-沿用已核验的分析与日期，不擅自改变数据后保留旧结论。事实、推断、估值、情景假设和未来条件需清楚区分。图表和交互有文字或键盘替代；浏览器用于验收，不是用户查看网页的安装前置条件。
+用户同时要求创建页面时，组合 `static-page-builder`：本技能先按仓库规则准备分支和输出目录，创建器负责生成与本地检查，再接收产物继续预览。创建器不可用时可用现有工具完成内容，但不能声称执行了该技能。
 
 ## 分支预览与正式发布
 
@@ -33,21 +27,29 @@ description: "把分析、报告或小工具分阶段制作成静态 HTML，核�
 
 GitHub Pages 原生并非每分支一个站点：此流程通过可信的 main 工作流组合 main/docs 和全部活动 PR 的静态文件，部署一个完整站点。未配置该机制的仓库不能直接套用预览 URL。
 
-## 验证
+## 线上验收
 
-`scripts/verify_site.py` 仅依赖标准库，只读检查 HTML、链接、模板占位、资源路径，以及可选线上字节匹配。它不执行 JavaScript，也不替代视觉或数据真实性检查。
+`scripts/verify_deployment.py` 使用标准库，只发 GET，核对站点 deployment.json 的源版本和实际发布文件哈希。它不解析页面布局或重复创建器的 HTML 结构检查。
 
-从 skill 的实际位置执行，`<checkout>` 与 `<skill-dir>` 为实际路径：
+正式检查示例：
 
 ```bash
-python3 <skill-dir>/scripts/verify_site.py \
-  --root <checkout>/docs --page . --page reports/513310/2026-11-20 \
-  --require-single-file --require-homepage-link
+python3 <skill-dir>/scripts/verify_deployment.py \
+  --base-url https://<owner>.github.io/<repo>/ --main-sha <approved-main-sha> \
+  --page . --page reports/<symbol>/<date>/ --local-root <checkout>/docs
 ```
 
-部署后的正式检查添加站点 `--base-url`。预览含自动注入的标记，需对照公开 `deployment.json` 中对应 PR 的精确 head SHA 与生成 HTML 哈希；不能用原始干净 HTML 的哈希冒充预览哈希，也不能用 HTTP 200 或旧 run 成功证明当前上线。
+预览检查示例：
 
-Chrome/Playwright 可用时检查移动和桌面、键盘与关键操作；不可用时如实报告范围，不将 DOM 模拟说成真实浏览器验收。每次检查只覆盖当前改动所需的行为，失败后依据证据修复。
+```bash
+python3 <skill-dir>/scripts/verify_deployment.py \
+  --base-url https://<owner>.github.io/<repo>/ \
+  --preview-pr <number> --preview-sha <reviewed-head-sha> --task <task>
+```
+
+预览含自动注入标记，脚本按部署记录的生成文件哈希核对，不能与干净源 HTML 强求字节相同。正式页可追加本地根目录逐字节核对。HTTP 200 或旧运行成功不足以证明本次上线；源提交和下载内容必须同时匹配。
+
+布局、内容和交互的缺陷交回创建流程修复；实质内容变更后重新部署并指明新的待审阅版本，不静默沿用旧确认。平台基路径或资源搬移造成的问题在发布流程中解决。
 
 ## 交付
 

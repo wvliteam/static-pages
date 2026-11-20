@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Read-only checks for static HTML directories and their deployed copies.
-
-This does not execute JavaScript, render layouts, or establish data accuracy.
-"""
+"""Check local HTML, resources and links without network or browser execution."""
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
+from html.parser import HTMLParser
 import json
+from pathlib import Path
 import re
 import sys
-from datetime import datetime, timezone
-from html.parser import HTMLParser
-from pathlib import Path
-from urllib.error import HTTPError, URLError
-from urllib.parse import quote, unquote, urljoin, urlsplit
-from urllib.request import Request, urlopen
+from urllib.parse import unquote, urlsplit
 
 
 class Document(HTMLParser):
@@ -76,11 +71,10 @@ class Document(HTMLParser):
                 self.references.append((match.group(1), True))
 
 
-class Verifier:
-    def __init__(self, root: Path, base_url: str | None, single_file: bool):
+class HtmlChecker:
+    def __init__(self, root: Path, base_path: str = "/", single_file: bool = False):
         self.root = root.resolve()
-        self.base_url = base_url
-        self.base_path = urlsplit(base_url).path if base_url else ''
+        self.base_path = base_path
         self.single_file = single_file
         self.documents: dict[Path, Document] = {}
 
@@ -118,8 +112,8 @@ class Verifier:
         if '\\' in value:
             raise ValueError('本地链接含反斜杠，无法可靠映射到站点 URL')
         if value.startswith('/'):
-            if not self.base_url or not value.startswith(self.base_path):
-                raise ValueError('根路径链接可能跳过项目基路径；使用相对链接或传入正确的 --base-url')
+            if not value.startswith(self.base_path):
+                raise ValueError('根路径链接可能跳过项目基路径；使用相对链接或传入正确的 --base-path')
             target = self.root / value[len(self.base_path):]
         else:
             target = page.parent / value if value else page
@@ -176,75 +170,42 @@ class Verifier:
                 target, _ = self.local_reference(home, ref)
                 if target == page:
                     return True
-                if self.base_url and urljoin(self.base_url, ref).split('#')[0].rstrip('/') == self.public_url(page).rstrip('/'):
-                    return True
             except (ValueError, OSError):
                 continue
         return False
 
-    def public_url(self, page: Path) -> str:
-        relative = page.relative_to(self.root).as_posix()
-        if relative == 'index.html':
-            relative = ''
-        elif relative.endswith('/index.html'):
-            relative = relative[:-len('index.html')]
-        return urljoin(self.base_url, quote(relative, safe='/'))
-
-
-def verify_remote(url: str, expected: bytes, timeout: float) -> dict:
-    request = Request(url, headers={'User-Agent': 'StaticPagePublisher-Verify/1.0', 'Cache-Control': 'no-cache'})
-    with urlopen(request, timeout=timeout) as response:
-        # A dated report is small; avoid reading an unexpected unbounded response.
-        received = response.read(len(expected) + 1)
-        status = response.status
-        kind = response.headers.get_content_type()
-        matched = received == expected
-        return {'url': url, 'final_url': response.geturl(), 'http_status': status,
-                'content_type': kind, 'content_matches_local': matched,
-                'sha256': hashlib.sha256(received).hexdigest() if matched else None,
-                'ok': status == 200 and kind == 'text/html' and matched}
-
-
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--root', required=True, type=Path, help='已准备好的站点目录，不进行写入')
-    parser.add_argument('--page', action='append', help='可重复；站内相对目录或 HTML 文件，默认检查根首页')
-    parser.add_argument('--base-url', help='可选；请求公开站点并核对字节，必须为含尾斜杠的 HTTP(S) 基路径')
-    parser.add_argument('--require-single-file', action='store_true', help='拒绝额外运行资源，外部来源超链接除外')
-    parser.add_argument('--require-homepage-link', action='store_true', help='每个页面必须出现在根首页导航中')
-    parser.add_argument('--timeout', type=float, default=15, help='单个 HTTP 请求超时秒数，范围1至60，默认15')
-    parser.add_argument('--output', type=Path, help='可选的 JSON 检查记录，不应覆盖站点文件')
+    parser.add_argument('--root', required=True, type=Path)
+    parser.add_argument('--page', action='append', help='Relative HTML path or directory; repeatable')
+    parser.add_argument('--base-path', default='/', help='Expected URL path prefix; no network request')
+    parser.add_argument('--require-single-file', action='store_true')
+    parser.add_argument('--require-homepage-link', action='store_true')
+    parser.add_argument('--output', type=Path, help='Optional JSON record outside the output directory')
     args = parser.parse_args(argv)
     if not args.root.is_dir():
-        parser.error('--root 必须为已有目录')
-    if not 1 <= args.timeout <= 60:
-        parser.error('--timeout 范围为1至60秒')
-    if args.base_url:
-        base = urlsplit(args.base_url)
-        if base.scheme not in {'http', 'https'} or not base.netloc or base.username or base.password or base.query or base.fragment or not args.base_url.endswith('/'):
-            parser.error('--base-url 必须为无凭据、无查询参数且以 / 结尾的 HTTP(S) URL')
+        parser.error('--root must be an existing directory')
+    base = urlsplit(args.base_path)
+    if (not args.base_path.startswith('/') or args.base_path.startswith('//')
+            or not args.base_path.endswith('/') or base.scheme or base.netloc
+            or base.query or base.fragment or '%' in args.base_path
+            or '..' in Path(args.base_path).parts or "\\" in args.base_path):
+        parser.error('--base-path must be an absolute URL path ending in /')
     if args.output and args.output.resolve().is_relative_to(args.root.resolve()):
-        parser.error('--output 必须位于站点目录外，避免覆盖网页或公开检查记录')
-    verifier = Verifier(args.root, args.base_url, args.require_single_file)
-    result = {'checked_at': datetime.now(timezone.utc).isoformat(), 'root': str(verifier.root),
-              'base_url': args.base_url, 'pages': [], 'ok': True}
+        parser.error('--output must be outside --root')
+    checker = HtmlChecker(args.root, args.base_path, args.require_single_file)
+    result = {'checked_at': datetime.now(timezone.utc).isoformat(),
+              'root': str(checker.root), 'base_path': args.base_path, 'pages': [], 'ok': True}
     for route in dict.fromkeys(args.page or ['.']):
         record = {'route': route, 'issues': []}
         try:
-            page = verifier.page_file(route)
-            record['file'] = page.relative_to(verifier.root).as_posix()
-            expected = page.read_bytes()
-            record['bytes'] = len(expected)
-            record['sha256'] = hashlib.sha256(expected).hexdigest()
-            record['issues'] = verifier.check(page)
-            if args.require_homepage_link and not verifier.homepage_has(page):
+            page = checker.page_file(route)
+            content = page.read_bytes()
+            record.update(file=page.relative_to(checker.root).as_posix(), bytes=len(content),
+                          sha256=hashlib.sha256(content).hexdigest(), issues=checker.check(page))
+            if args.require_homepage_link and not checker.homepage_has(page):
                 record['issues'].append('根导航首页尚未收录这个页面')
-            if args.base_url:
-                remote = verify_remote(verifier.public_url(page), expected, args.timeout)
-                record['remote'] = remote
-                if not remote['ok']:
-                    record['issues'].append('线上状态、类型或内容与本地页面不符')
-        except (ValueError, UnicodeError, OSError, HTTPError, URLError) as exc:
+        except (ValueError, UnicodeError, OSError) as exc:
             record['issues'].append(str(exc))
         record['ok'] = not record['issues']
         result['ok'] = result['ok'] and record['ok']

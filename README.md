@@ -20,7 +20,8 @@
 .github/workflows/pages.yml        # 统一构建和部署
 scripts/                          # 可信的静态发布脚本
 tests/                            # 发布规则测试
-skills/static-page-publisher/     # 可安装、可版本追踪的页面创建与发布 skill
+skills/static-page-builder/       # 页面创建、数据与交互、本地检查
+skills/static-page-publisher/     # PR预览、正式收录、线上部署检查
 docs/
   index.html                      # 正式导航首页
   .nojekyll
@@ -54,4 +55,15 @@ Pages 的发布类型是 GitHub Actions。每次使用最新 main/docs 和所有
 
 ## Skill
 
-[static-page-publisher](skills/static-page-publisher/SKILL.md) 与流程一起版本管理。它涵盖分阶段建页、UI 与数据核对、分支预览、正式批准、部署验证。仓库内仅保留可移植说明与脚本；账号配置通过仓库远端、AGENTS.md 和会话确定，不包含本机绝对路径或凭据。skill 不属于 docs，不会被当作网页发布。
+两个独立 skill 与流程一起版本管理：
+
+| Skill | 职责 | 独立使用 |
+| --- | --- | --- |
+| [static-page-builder](skills/static-page-builder/SKILL.md) | 分阶段制作页面、图表与交互、数据与本地HTML检查 | 接受任意输出目录，无须 GitHub 登录 |
+| [static-page-publisher](skills/static-page-publisher/SKILL.md) | 预览分支、PR、确认与正式收录、线上版本和哈希检查 | 直接接收已有静态页面 |
+
+完整任务按“发布器准备分支与路径 → 创建器生成并检查 → 发布器提供在线预览 → 确认后正式收录”组合。交接信息包括产物目录、入口文件、必要资源、数据日期和检查结果；不要求额外的元数据框架。
+
+创建器的 `check_static_html.py` 只检查本地 HTML 和资源。发布器的 `verify_deployment.py` 只核对线上 manifest、源提交与生成文件哈希。金融报告说明位于创建器的可选参考文档，普通页面无需加载。
+
+两者均可单独安装到本机 skills 目录；从本仓库安装时选择对应的 `skills/<skill-name>` 路径。账号、站点和目录约定通过仓库远端、AGENTS.md 和会话确定。skill 不属于 docs，不会作为网页发布。
