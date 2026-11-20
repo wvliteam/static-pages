@@ -5,6 +5,17 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "reports/513310/2026-11-20/index.html": "e7fbd1ecd16e6395a07adf1d6026ef3b81d5d8f6a1bc6d739a7227ab8867ddc2"
   },
-  "previews": [],
+  "previews": [
+    {
+      "pr": 1,
+      "branch": "preview/pipeline-check",
+      "head_sha": "21ba41b3485c571bab4f9885307058d0d3194b51",
+      "task": "pipeline-check",
+      "url": "https://wvliteam.github.io/static-pages/previews/pr-1/pipeline-check/",
+      "sha256": {
+        "index.html": "2b15298936f80b8327d169a437ebae570aa074ed1a25c58faa99970145a1d969"
+      }
+    }
+  ],
   "skipped": []
 }
