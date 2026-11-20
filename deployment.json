@@ -9,11 +9,11 @@
     {
       "pr": 1,
       "branch": "preview/pipeline-check",
-      "head_sha": "21ba41b3485c571bab4f9885307058d0d3194b51",
+      "head_sha": "e3cd60f5b60311e6a12855be39a4c9f757f42a3c",
       "task": "pipeline-check",
       "url": "https://wvliteam.github.io/static-pages/previews/pr-1/pipeline-check/",
       "sha256": {
-        "index.html": "2b15298936f80b8327d169a437ebae570aa074ed1a25c58faa99970145a1d969"
+        "index.html": "3f9beac1bb63a7dadd18f97cfc651b5cb118fe358c72f7b612198933d03cdd73"
       }
     }
   ],
