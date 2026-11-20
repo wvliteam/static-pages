@@ -1,11 +1,13 @@
 # Static Pages publishing conventions
 
-- This is the shared repository for all of the user's static pages. Add each new page in its own directory here; do not create a repository per page.
-- Drafts, source data, screenshots, and intermediate output belong in the repository-root `artifacts/<task>/` directory. It is ignored by Git and outside the Pages publishing source. Create it locally when needed; do not force-add it.
-- Create and verify a complete reviewable page in `artifacts/` first. Promote the specific output only after the user confirms publication of that output; unrelated past publication permission is not blanket approval for new drafts. Do not write drafts into `docs/` or update the public navigation before that confirmation.
-- Confirmed financial reports belong at `docs/reports/<symbol>/<YYYY-MM-DD>/index.html`. Other confirmed pages use `docs/pages/<slug>/index.html`; tools use `docs/tools/<slug>/index.html`.
-- Keep `docs/index.html` as the public navigation page. On confirmed publication update its entries, visible page count, and the repository-root README. Preserve existing entries and archived report dates.
-- Publish only the `docs/` directory from the existing `main` branch via GitHub Pages; retain `docs/.nojekyll`. The base URL is `https://wvliteam.github.io/static-pages/`. The physical `docs/` prefix is not part of public URLs.
-- Use relative links and asset paths that work under this base URL. Prefer self-contained HTML where useful. Do not add server-side requirements to published pages.
-- Publish only intended page content and assets. Keep `artifacts/` outside `docs/` and untracked. Files committed to this public repository remain readable on GitHub even if they are outside `docs/`; this layout excludes drafts from publication, not a directory access-control feature. Keep credentials and account data out of both Git and published pages.
-- Check new page URLs and the navigation homepage after deployment. State clearly whether a report is a dated snapshot or updates automatically.
+- Reuse `wvliteam/static-pages` for all pages. Do not create a repository per page.
+- `main/docs/` contains only approved formal pages. Financial reports use `docs/reports/<symbol>/<YYYY-MM-DD>/index.html`; other pages use `docs/pages/<slug>/index.html` or `docs/tools/<slug>/index.html`.
+- Develop each new page on a `preview/<task>` branch. Commit only reviewable HTML and required assets at `artifacts/<task>/public/`; use lowercase task slugs. Keep raw data, logs, screenshots, credentials, and local tooling in ignored `scratch/` or outside the checkout.
+- Open a same-repository PR targeting `main` to trigger a Pages preview. The workflow runs trusted main scripts and reads static files at the PR head SHA. Never run PR build scripts with privileged credentials.
+- The preview URL is `https://wvliteam.github.io/static-pages/previews/pr-<number>/<task>/`. The deployment injects a preview banner and noindex metadata; source HTML stays clean. Preview URLs are public, not access controlled.
+- Preview does not imply formal approval. After the user approves this specific version, move its final files from `artifacts/<task>/public/` to their formal `docs/` destination on the PR branch, remove tracked draft artifacts, and update `docs/index.html` plus the README page list. Only then merge that PR. Do not repeatedly ask for approval already given.
+- Never merge tracked `artifacts/` into `main`. Do not add draft links or draft counts to the formal homepage. Preserve other reports, their dates, and existing user changes.
+- Pages uses GitHub Actions. The generated `gh-pages` branch contains main/docs and previews from all open eligible PRs; do not edit or merge it into main. `previews/` is reserved for generated output and must not exist in main/docs.
+- Every run rebuilds the complete deployment so previews do not overwrite formal pages or one another. Closing/merging a PR removes its preview on the next successful deployment.
+- Source skill files live at `skills/static-page-publisher/`, outside docs. Keep them portable and free of tokens and machine-specific paths. Update the locally installed copy when changing the tracked skill, and vice versa.
+- Use relative links that work under `/static-pages/` and the nested preview path. On deployment check the public deployment.json against the main and PR head SHAs, then verify the actual preview/formal HTML content.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "静态页面创建与发布"
+  short_description: "分阶段创建HTML，通过PR分支在线预览，确认后合入统一站点并核对部署"
+  default_prompt: "使用 $static-page-publisher 将上述内容制作成静态网页，在 preview 分支提供 Pages 在线预览，确认本次版本后再合入 main 正式收录。"

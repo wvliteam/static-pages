@@ -1,0 +1,66 @@
+name: Publish site and PR previews
+
+on:
+  push:
+    branches: [main]
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed, edited]
+  workflow_dispatch:
+
+# Each run reconstructs the whole site from current main and all open preview
+# PRs. Serial execution prevents an older snapshot replacing a newer deployment.
+concurrency:
+  group: static-pages-deployment
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    if: >-
+      github.event_name != 'pull_request_target' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       startsWith(github.event.pull_request.head.ref, 'preview/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      # Always run trusted main scripts, never workflow or build code from PRs.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Test the publisher
+        run: python3 -m unittest discover -s tests -v
+      - name: Assemble production and open PR previews
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/build_pages.py --output "$RUNNER_TEMP/pages-site"
+      - name: Update the generated gh-pages branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/stage_pages.py --site "$RUNNER_TEMP/pages-site"
+      - name: Upload the assembled site
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: ${{ runner.temp }}/pages-site
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the complete site
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

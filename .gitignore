@@ -1,2 +1,4 @@
-# Temporary work stays local and is never committed to the public repository.
-/artifacts/
+/scratch/
+/_site/
+__pycache__/
+*.pyc
