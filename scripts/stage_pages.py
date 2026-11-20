@@ -11,7 +11,10 @@ import subprocess
 
 
 def run(*args, cwd):
-    return subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+    result = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(result.stderr.strip() or 'Git staging operation failed')
+    return result.stdout.strip()
 
 
 def main():
