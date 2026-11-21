@@ -192,6 +192,42 @@ python3 -m unittest discover -s tests -v
 
 PR 事件执行的测试来自 main，不会测试 PR 内改动后的发布代码。维护基础设施时应先在本地运行相应测试，不把在线静态预览当作新脚本的验证结果。
 
+### 使用 OpenSpec
+
+门户能力、复杂静态工具和发布基础设施的行为变更使用 OpenSpec。定期更新报告、修改文案或微调样式沿用现有页面制作和发布流程。[门户设计](design/static-portal/README.md) 可直接作为提案的依据。
+
+仓库已包含 `.agents/skills/` 下的 Codex 集成和 `openspec/config.yaml`，克隆后无需重新初始化。开发环境可安装本仓库试用的 [OpenSpec 2.1.1](https://github.com/Fission-AI/OpenSpec/releases/tag/v2.1.1)；使用 npm 时，该版本要求 [Node.js 22.20.0 或更高](https://github.com/Fission-AI/OpenSpec/blob/v2.1.1/package.json)。
+
+```bash
+npm install -g @fission-ai/openspec@2.1.1
+openspec validate --all --strict --no-interactive
+```
+
+在 Codex 中使用 `$openspec-propose` 创建提案、设计、规范和任务，审阅后用 `$openspec-apply-change` 实施。完成检查后用 `$openspec-archive-change` 归档并更新 `openspec/specs/`，再运行一次严格校验。新增能力应在增量规范中填写有实际内容的 `## Purpose`，避免归档后留下占位说明。现行行为以 [能力规范](openspec/specs/candidate-validation/spec.md) 和仓库约定为准；历史提案在 `openspec/changes/archive/`。变更 OpenSpec 版本时，在独立分支审阅 `openspec update` 生成的文件。
+
+规范校验只检查规范素材。页面检查、预览确认的 head SHA、草稿迁移及正式部署核对仍按本指南执行。Pages 和候选验证工作流均无需额外安装 OpenSpec 或 Node.js。
+
+### 候选检查和合并就绪
+
+[候选验证工作流](.github/workflows/validate.yml) 为以 main 为目标的 PR 提供两个独立结果：
+
+| 检查 | 检查内容 |
+| --- | --- |
+| `static-pages-candidate` | 对测试合并提交运行 Python 测试并检查全部正式 HTML；对 PR head 的归档检查所有预览任务、入口和直接资源。 |
+| `static-pages-main-ready` | 检查完整的测试合并树中是否仍跟踪 `artifacts/` 文件，不受分支名或未跟踪本地文件影响。 |
+
+检查日志记录事件 base、PR head 和测试合并提交。有效预览的候选检查可以通过，同时合并就绪检查会因草稿仍在而失败；按现有流程确认并迁移后再看新的检查结果。候选检查不运行浏览器、不解析所有间接资源，也不向 Pages 提供任何部署权限。PR 有合并冲突时先解决冲突，再重跑检查。当前实现只报告结果；是否强制通过取决于仓库的合并规则。
+
+本地可用和 CI 一样的命令验证：先检出事件对应的测试合并提交并获取其两个父提交；事件 JSON 放在 `scratch/pr-event.json`，需要 `pull_request.number`、`base.ref`、`base.sha` 和 `head.sha`（后三项位于 `pull_request` 内）。
+
+```bash
+python3 scripts/check_candidate.py candidate --event-path scratch/pr-event.json --candidate-sha "$(git rev-parse HEAD)"
+python3 scripts/check_candidate.py main-ready --event-path scratch/pr-event.json --candidate-sha "$(git rev-parse HEAD)"
+python3 -m unittest discover -s tests -v
+```
+
+回退候选检查时，移除独立工作流及其脚本即可；如果之后已将检查设为必需，先调整对应仓库规则。Pages 发布不依赖候选工作流。
+
 ### 新仓库复用时的配置
 
 当前仓库已完成配置。若复制到其他项目仓库，需要检查这些项目，不能仅创建预览分支：

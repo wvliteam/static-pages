@@ -1,0 +1,46 @@
+name: Validate pull request candidates
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: static-pages-validation-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    name: static-pages-candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate candidate snapshots and static HTML
+        run: >-
+          python3 scripts/check_candidate.py candidate
+          --event-path "$GITHUB_EVENT_PATH" --candidate-sha "$GITHUB_SHA"
+      - name: Test the candidate code
+        run: python3 -m unittest discover -s tests -v
+
+  main-ready:
+    name: static-pages-main-ready
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the merge tree for tracked drafts
+        run: >-
+          python3 scripts/check_candidate.py main-ready
+          --event-path "$GITHUB_EVENT_PATH" --candidate-sha "$GITHUB_SHA"
