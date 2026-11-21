@@ -1,0 +1,24 @@
+schema: spec-driven
+
+context: |
+  使用简体中文撰写文档正文，保留 OpenSpec 要求的英文标题和 SHALL/MUST 关键字。
+  先读仓库根目录的 AGENTS.md；目录、预览、确认和发布流程以该文件为准。
+  本仓库统一维护静态页面、预览和发布工具。现有门户设计在 design/static-portal/，通过引用复用。
+  OpenSpec 文件在仓库根目录的 openspec/，与 docs/ 和 artifacts/*/public/ 分开。
+  OpenSpec 用于门户能力、复杂工具和发布基础设施。常规报告更新、文案和样式小修按既有流程处理。
+
+rules:
+  proposal:
+    - 说明变更范围、受影响的路径或能力，以及此次不处理的内容。
+  specs:
+    - 写可观察的正常和失败场景；引用已有设计，不复制整个设计文档。
+  tasks:
+    - 写出适用的本地检查、验收证据及回退方式。
+
+operations:
+  apply:
+    guidance:
+      - 依 AGENTS.md 和 CONTRIBUTING.md 执行页面检查或基础设施测试。
+  archive:
+    guidance:
+      - 根据实际检查证据勾选任务；规范归档不代表预览已批准或线上已发布。

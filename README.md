@@ -112,6 +112,10 @@ scratch/                          # 本地临时目录，按需创建
 
 安装方式和两个检查脚本的示例见 [使用指南](CONTRIBUTING.md)。技能源码保存在仓库 `skills/` 下，安装到本机的副本需要单独同步。
 
+## 规范驱动开发
+
+门户能力、复杂工具和发布基础设施可以使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 跟踪提案、可验证场景和实施任务。规范与归档在 [openspec/](openspec/)，Codex 的项目技能在 `.agents/skills/`。安装、适用范围及首个候选检查示例见 [开发指南](CONTRIBUTING.md#使用-openspec)。常规内容更新继续使用现有页面流程。
+
 ## 部署原理
 
 仓库的 Pages 发布来源为 **GitHub Actions**。推送 main、符合条件的 PR 事件或手动运行，会触发 [pages.yml](.github/workflows/pages.yml)：
