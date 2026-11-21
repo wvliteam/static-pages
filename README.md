@@ -5,6 +5,7 @@
 - [正式页面目录](https://wvliteam.github.io/static-pages/)
 - [使用指南：创建、预览、发布、维护](CONTRIBUTING.md)
 - [Agent 工作约定](AGENTS.md)
+- [已采纳方案：直接静态门户设计与实施计划](design/static-portal/README.md)
 - [部署工作流与运行记录](https://github.com/wvliteam/static-pages/actions/workflows/pages.yml)
 - [当前部署版本记录](https://wvliteam.github.io/static-pages/deployment.json)
 
