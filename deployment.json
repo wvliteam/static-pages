@@ -15,6 +15,16 @@
       "sha256": {
         "index.html": "3f9beac1bb63a7dadd18f97cfc651b5cb118fe358c72f7b612198933d03cdd73"
       }
+    },
+    {
+      "pr": 3,
+      "branch": "preview/preview-demo",
+      "head_sha": "7670a62fae78827c891860cd4624af3eb8d628e7",
+      "task": "preview-demo",
+      "url": "https://wvliteam.github.io/static-pages/previews/pr-3/preview-demo/",
+      "sha256": {
+        "index.html": "015581bf825223d54aac50565267a6b670401c832ac4f57609289df2e74e0dc8"
+      }
     }
   ],
   "skipped": []

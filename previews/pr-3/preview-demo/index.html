@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow,noarchive"><style data-static-preview="true">
+.static-preview-banner{position:relative;z-index:10000;background:#fff4d6;color:#503a10;
+padding:12px 20px;font:14px/1.6 system-ui,sans-serif;border-bottom:1px solid #d5ad4d}
+.static-preview-banner a{color:#503a10;text-decoration:underline}
+@media print{.static-preview-banner{print-color-adjust:exact}}
+</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>静态产物预览 · 功能演示</title>
+<style>
+  :root{--bg:#0f172a;--card:#16213f;--ink:#e8edf9;--muted:#9fb0d0;--acc:#6ea8ff;--acc2:#53e2c0;--line:#2a3a63}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+       background:radial-gradient(1200px 600px at 15% -10%,#1b2c57 0%,transparent 60%),
+                  radial-gradient(900px 500px at 110% 10%,#123b3a 0%,transparent 55%),var(--bg);min-height:100vh}
+  a{color:var(--acc)}
+  .wrap{max-width:920px;margin:0 auto;padding:56px 24px 80px}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--line);
+         border-radius:999px;color:var(--acc2);font-size:13px;background:#0d1832}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--acc2);box-shadow:0 0 0 4px #53e2c022}
+  h1{font-size:clamp(28px,5vw,46px);line-height:1.2;margin:22px 0 12px;letter-spacing:-.5px}
+  .lead{color:var(--muted);font-size:clamp(16px,2.4vw,19px);max-width:680px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:36px 0}
+  .card{background:linear-gradient(180deg,#182546,#141f3c);border:1px solid var(--line);border-radius:16px;
+        padding:22px;box-shadow:0 12px 30px #0003}
+  .card h3{margin:0 0 8px;font-size:18px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .ico{font-size:26px;margin-bottom:10px}
+  .flow{counter-reset:s;list-style:none;padding:0;margin:16px 0 0;display:grid;gap:12px}
+  .flow li{counter-increment:s;position:relative;padding:14px 16px 14px 56px;border:1px solid var(--line);
+           border-radius:12px;background:#111d38;color:var(--muted);font-size:14px}
+  .flow li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:9px;
+           background:var(--acc);color:#0b1530;font-weight:800;display:grid;place-items:center}
+  .flow li b{color:var(--ink)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0a1330;border:1px solid var(--line);
+       padding:2px 7px;border-radius:6px;font-size:13px;color:var(--acc2)}
+  .foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  h2{font-size:22px;margin:40px 0 6px}
+</style>
+</head>
+<body><aside class="static-preview-banner" data-static-preview="true" aria-label="预览状态"><strong>预览稿 · 尚未正式收录</strong> · PR #3 · preview-demo · 版本 7670a62。<a href="https://github.com/wvliteam/static-pages/pull/3">查看审阅记录</a></aside>
+<div class="wrap">
+  <span class="badge"><span class="dot"></span>静态产物 · PR 预览演示</span>
+  <h1>静态产物预览，一条 PR 就能上线审阅</h1>
+  <p class="lead">这个页面是一次预览能力的验证样例：它由 <code>preview/</code> 分支中的静态文件构建，
+     通过同仓库 Pull Request 自动部署到独立的临时网址，审阅通过后才迁入正式站点。</p>
+
+  <div class="grid" id="features">
+    <div class="card"><div class="ico">📦</div><h3>纯静态产物</h3>
+      <p>HTML、CSS 与资源自包含，不依赖服务器端程序或数据库，也不在部署环节执行 PR 代码。</p></div>
+    <div class="card"><div class="ico">🔀</div><h3>分支隔离</h3>
+      <p>草稿只放在 <code>artifacts/&lt;task&gt;/public/</code>，与正式 <code>docs/</code> 完全分离，互不污染。</p></div>
+    <div class="card"><div class="ico">🔗</div><h3>独立预览网址</h3>
+      <p>按 PR 编号与任务名生成唯一路径，带预览标记与 noindex，公开可直达但不计入正式导航。</p></div>
+    <div class="card"><div class="ico">🔐</div><h3>版本可校验</h3>
+      <p>部署记录写入提交 SHA 与文件哈希，可逐字节核对线上内容与审阅版本是否一致。</p></div>
+  </div>
+
+  <h2 id="how">它是怎么工作的</h2>
+  <ol class="flow">
+    <li><b>准备草稿</b>：在 <code>preview/&lt;task&gt;</code> 分支提交 <code>artifacts/&lt;task&gt;/public/index.html</code>。</li>
+    <li><b>创建 PR</b>：向 <code>main</code> 发起 Pull Request，触发可信工作流。</li>
+    <li><b>自动组合</b>：工作流读取正式站点与全部活动预览，按精确 head SHA 抓取静态文件。</li>
+    <li><b>生成预览</b>：注入可见标记与 noindex，写入 <code>deployment.json</code>，发布到 Pages。</li>
+    <li><b>审阅确认</b>：确认具体版本后，再迁移到正式目录、移除草稿并合入。</li>
+  </ol>
+
+  <div class="foot">
+    本页面为流程演示样例，仅存在于审阅分支，不应合入 main。
+    正式页面目录见 <a href="https://wvliteam.github.io/static-pages/">站点首页</a>。
+  </div>
+</div>
+</body>
+</html>
