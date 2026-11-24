@@ -1,9 +1,10 @@
 {
-  "main_sha": "d98a272fef935793ce92ca7044c538b8b6feab37",
+  "main_sha": "ac98ec514276c25d4e59bd88d75bcf42401b4660",
   "production_sha256": {
     "CNAME": "e2575e6d4a429a00ede1a43a19f9b392237cd1450fe2257735a76f3021245116",
-    "index.html": "e451c70e351fa7a1db3afb4e5bcb435795e7949d6384775a0ed4235ae9035ebf",
+    "index.html": "e208045cc864950a8bbd98bb4532fde83200171c346a99543ecd361f44d1f775",
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reports/portfolio-flash/2026-11-24/v2-preview/index.html": "8e5fe949eb01cc9c37a19ca64735cbb636cdd6d7ec56c0df68b763e397cc970d",
     "reports/portfolio-flash/2026-11-24/1600/index.html": "aadb5ded9772576a55097c10199d113ea901c99630a893c11c5e34b22cfbaed0",
     "reports/portfolio-flash/2026-11-24/2100/index.html": "d0af631af590e780028b0a741b2b451a3c2c840a5df1e8f1c3bce96d2ada4bd8",
     "reports/513310/2026-11-20/index.html": "e7fbd1ecd16e6395a07adf1d6026ef3b81d5d8f6a1bc6d739a7227ab8867ddc2"
