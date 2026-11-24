@@ -2,598 +2,603 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【新版原型演示】专业金融盯盘座舱 · 财经快讯与持仓预测 (v2.0)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>财经快讯 · 专业盯盘座舱 v2.1</title>
 <style>
 :root{
-  --bg:#f4f6f9;--card:#ffffff;--ink:#1a1f2c;--sub:#626d7c;--line:#e2e6eb;--line-subtle:#edf0f4;
-  --up:#d93025;--upbg:#fce8e6;--upborder:#fad2cf;
-  --down:#188038;--downbg:#e6f4ea;--downborder:#ceead6;
-  --neu:#5f6368;--neubg:#f1f3f4;--neuborder:#dadce0;
-  --wait:#ea8600;--waitbg:#fef7e0;--waitborder:#feefc3;
-  --accent:#1a73e8;--accentbg:#e8f0fe;--accentborder:#aecbfa;
-  --live:#137333;--livebg:#ceead6;
-  --purple:#9334e6;--purplebg:#f3e8fd;
+  --bg:#f6f8fa;--card:#ffffff;--card-subtle:#f8f9fa;--ink:#1f2328;--sub:#656d76;
+  --line:#d0d7de;--line-subtle:#eaeef2;
+  --up:#cf222e;--upbg:#ffebe9;--upborder:#ffc1ba;
+  --down:#1a7f37;--downbg:#dafbe1;--downborder:#aceebb;
+  --neu:#57606a;--neubg:#f6f8fa;--neuborder:#d0d7de;
+  --wait:#9a6700;--waitbg:#fff8c5;--waitborder:#f1e05a;
+  --accent:#0969da;--accentbg:#ddf4ff;--accentborder:#54aeff;
+  --purple:#8250df;--purplebg:#fbefff;--purpleborder:#e8c6ff;
+  --live:#1a7f37;--livebg:#dafbe1;
   --mono:ui-monospace,SFMono-Regular,"Roboto Mono",Menlo,Monaco,Consolas,monospace;
-  --radius-sm:4px;--radius:8px;--radius-lg:12px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 3px rgba(0,0,0,0.06);
-  --shadow:0 2px 4px rgba(0,0,0,0.04),0 4px 8px rgba(0,0,0,0.06);
+  --radius-sm:4px;--radius:8px;--radius-lg:10px;
 }
 
 *{box-sizing:border-box}
-body{margin:0;padding:20px 16px 80px;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif}
-.wrap{max-width:1040px;margin:0 auto}
+body{
+  margin:0;padding:12px 10px 60px;background:var(--bg);color:var(--ink);
+  font:13.5px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:880px;margin:0 auto}
 
-/* 数字与代码规范 */
+/* 金融等宽数字 */
 .num,.code,.time,.price,.chg{font-variant-numeric:tabular-nums;font-family:var(--mono)}
 
-/* 1. 全球市场交易时钟跑马状态条 */
+/* 1. 顶部全球市场时钟跑马条 (紧凑移动端自适应) */
 .market-pulse-bar{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:8px;box-shadow:var(--shadow-sm);
+  padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;
+  gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;
 }
-.pulse-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--sub)}
-.pulse-items{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.pulse-title{font-size:11.5px;font-weight:700;color:var(--sub);display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.pulse-scroll{display:inline-flex;align-items:center;gap:6px}
 .pulse-item{
-  display:inline-flex;align-items:center;gap:5px;background:var(--neubg);
-  padding:3px 8px;border-radius:var(--radius-sm);font-size:11.5px;color:var(--ink);
-  border:1px solid var(--line-subtle);
+  display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--radius-sm);
+  font-size:11px;background:var(--neubg);color:var(--ink);border:1px solid var(--line-subtle);flex-shrink:0;
 }
-.pulse-item.live{background:var(--livebg);color:var(--live);font-weight:600;border-color:#b7e1cd}
+.pulse-item.live{background:var(--livebg);color:var(--live);font-weight:600;border-color:var(--downborder)}
 .pulse-item.pre{background:var(--waitbg);color:var(--wait);font-weight:600;border-color:var(--waitborder)}
 
-/* 呼吸绿点 */
-.dot-live{width:7px;height:7px;border-radius:50%;background:#188038;display:inline-block;box-shadow:0 0 0 0 rgba(24,128,56,0.7);animation:pulse-dot 1.8s infinite}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--live);display:inline-block;animation:pulse-dot 1.8s infinite}
 @keyframes pulse-dot{
-  0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(24,128,56,0.7)}
-  70%{transform:scale(1);box-shadow:0 0 0 5px rgba(24,128,56,0)}
-  100%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(24,128,56,0)}
+  0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(26,127,55,0.7)}
+  70%{transform:scale(1);box-shadow:0 0 0 4px rgba(26,127,55,0)}
+  100%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(26,127,55,0)}
 }
 
 /* 顶部标题区 */
-.top-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px}
-.main-title{font-size:22px;font-weight:800;letter-spacing:-0.4px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
-.node-badge{background:var(--accent);color:#fff;padding:2px 8px;border-radius:var(--radius-sm);font-size:12px;font-weight:700}
-.lead-sub{font-size:12.5px;color:var(--sub);margin:0}
+.top-header{display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px;flex-wrap:wrap;gap:6px}
+.main-title{font-size:18px;font-weight:800;margin:0;display:flex;align-items:center;gap:6px;letter-spacing:-0.3px}
+.node-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:700}
+.header-meta{font-size:11.5px;color:var(--sub)}
 
-/* 2. 首屏决策黄金区：A股核心研判与推演决策舱 (Hero Matrix) */
+/* 状态徽标 (State Badges) */
+.badge{display:inline-block;border-radius:var(--radius-sm);padding:1px 5px;font-size:10.5px;font-weight:600;white-space:nowrap;line-height:1.3}
+.b-live{background:var(--livebg);color:var(--live);border:1px solid var(--downborder)}
+.b-pre{background:var(--waitbg);color:var(--wait);border:1px solid var(--waitborder)}
+.b-closed{background:var(--neubg);color:var(--sub);border:1px solid var(--line)}
+.b-history{background:var(--purplebg);color:var(--purple);border:1px solid var(--purpleborder)}
+
+.tag-up{color:var(--up);background:var(--upbg);border:1px solid var(--upborder);font-weight:700}
+.tag-down{color:var(--down);background:var(--downbg);border:1px solid var(--downborder);font-weight:700}
+.tag-neu{color:var(--neu);background:var(--neubg);border:1px solid var(--neuborder)}
+
+/* 2. 首屏决策黄金区：A股推演攻守矩阵 (移动端超精简高密度) */
 .hero-matrix{
-  background:linear-gradient(135deg, #ffffff 0%, #f9fbfe 100%);
-  border:1px solid #d2e3fc;border-top:4px solid var(--accent);border-radius:var(--radius-lg);
-  padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow);
+  background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);
+  border-radius:var(--radius-lg);padding:12px;margin-bottom:12px;
 }
-.hero-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e8f0fe}
-.hero-title{font-size:14.5px;font-weight:800;color:#174ea6;display:flex;align-items:center;gap:6px}
-.hero-tag{font-size:11px;background:#e8f0fe;color:var(--accent);padding:2px 6px;border-radius:var(--radius-sm);font-weight:700}
+.hero-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line-subtle)}
+.hero-title{font-size:13px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:5px}
 
-.matrix-grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media (min-width:768px){.matrix-grid{grid-template-columns:1.2fr 1fr 1.1fr}}
+.decision-bullets{display:flex;flex-direction:column;gap:6px}
+.d-bullet{
+  display:flex;align-items:flex-start;gap:6px;font-size:12.5px;line-height:1.45;
+  padding:6px 8px;border-radius:var(--radius-sm);background:var(--card-subtle);border-left:3px solid var(--accent);
+}
+.d-bullet.alert{background:var(--upbg);border-left-color:var(--up);color:var(--ink)}
+.d-tag{font-weight:800;font-size:11.5px;flex-shrink:0;white-space:nowrap}
 
-.matrix-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow-sm)}
-.matrix-label{font-size:11.5px;font-weight:700;color:var(--sub);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.matrix-val{font-size:13px;line-height:1.55;color:var(--ink)}
-.matrix-val b{color:#0d47a1}
-.matrix-highlight{background:var(--upbg);border-left:3px solid var(--up);padding:6px 10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12.5px;margin-top:6px;color:#b06000}
+/* 3. 分类指数看板 (A股、港股、日韩、美股、期货每类一行) */
+.sec-head{
+  font-size:13px;font-weight:800;margin:16px 0 8px;padding-left:8px;border-left:3px solid var(--accent);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.cat-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 
-/* 3. 全球跨市场联动看板 (引入时态状态机) */
-.sec-title{font-size:15px;font-weight:800;margin:24px 0 12px;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
-.sec-title span{display:flex;align-items:center;gap:8px}
-
-.ticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:20px}
-.ticker-card{
+.cat-row{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between;
-  box-shadow:var(--shadow-sm);transition:transform .12s ease,border-color .12s ease;
+  padding:8px 10px;display:flex;flex-direction:column;gap:6px;
 }
-.ticker-card:hover{transform:translateY(-1px);border-color:#b0c4de}
-.ticker-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.ticker-name{font-weight:700;font-size:12.5px;color:var(--ink)}
+.cat-row-header{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;color:var(--sub)}
+.cat-row-chips{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:6px;
+}
+@media (min-width:600px){
+  .cat-row{flex-direction:row;align-items:center;justify-content:space-between;padding:8px 12px}
+  .cat-row-header{min-width:130px;flex-shrink:0}
+  .cat-row-chips{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1;justify-content:flex-end}
+}
 
-/* 状态徽标分类 (State Badges) */
-.badge{display:inline-block;border-radius:var(--radius-sm);padding:1px 5px;font-size:10.5px;font-weight:600;white-space:nowrap}
-.b-live{background:#e6f4ea;color:#137333;border:1px solid #ceead6}
-.b-pre{background:#fef7e0;color:#b06000;border:1px solid #feefc3}
-.b-closed{background:#f1f3f4;color:#5f6368;border:1px solid #dadce0}
-.b-history{background:#f3e8fd;color:#7627bb;border:1px solid #e9d5ff}
+.t-chip{
+  background:var(--card-subtle);border:1px solid var(--line-subtle);border-radius:var(--radius-sm);
+  padding:5px 8px;display:flex;justify-content:space-between;align-items:center;gap:6px;
+}
+.t-chip-left{display:flex;flex-direction:column}
+.t-chip-name{font-weight:700;font-size:12px;color:var(--ink)}
+.t-chip-price{font-size:13px;font-weight:800;color:var(--ink);font-family:var(--mono)}
 
-.ticker-price-row{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0}
-.ticker-price{font-size:16px;font-weight:800;color:var(--ink)}
-.ticker-chg{padding:1px 6px;border-radius:var(--radius-sm);font-size:12px;font-weight:700}
-.chg-up{color:var(--up);background:var(--upbg)}
-.chg-down{color:var(--down);background:var(--downbg)}
-.ticker-foot{font-size:10.5px;color:var(--sub);display:flex;justify-content:space-between;margin-top:2px;border-top:1px dashed var(--line-subtle);padding-top:4px}
-
-/* 4. 持仓全景透视 (统一合并看板，支持 Tab 切换，消除重复表) */
-.cockpit-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
-.cockpit-tabs{display:flex;background:#f8f9fa;border-bottom:1px solid var(--line);padding:4px 8px 0}
+/* 4. 持仓全景透视 (Tab 切换卡片) */
+.cockpit-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:14px;overflow:hidden}
+.cockpit-tabs{display:flex;background:var(--card-subtle);border-bottom:1px solid var(--line)}
 .cockpit-tab{
-  padding:8px 16px;font-size:13px;font-weight:700;color:var(--sub);border:none;background:none;
-  cursor:pointer;border-bottom:3px solid transparent;transition:all .12s ease;
+  flex:1;padding:8px;font-size:12.5px;font-weight:700;color:var(--sub);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;text-align:center;transition:all .1s ease;
 }
-.cockpit-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card);border-radius:var(--radius-sm) var(--radius-sm) 0 0}
-.cockpit-content{padding:14px 16px}
+.cockpit-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card)}
+.cockpit-content{padding:10px}
 
-/* 持仓卡片式表格 */
-.p-row{
-  display:grid;grid-template-columns:1fr;gap:8px;padding:12px 10px;
-  border-bottom:1px solid var(--line-subtle);transition:background .1s ease;
+/* 个股精简卡片行 */
+.stock-card-row{
+  background:var(--card);border:1px solid var(--line-subtle);border-radius:var(--radius-sm);
+  padding:8px 10px;margin-bottom:6px;display:flex;flex-direction:column;gap:4px;
 }
-@media (min-width:768px){
-  .p-row{grid-template-columns:1.8fr 1fr 1fr 1.6fr 1.8fr;align-items:center}
+.stock-card-row:last-child{margin-bottom:0}
+.stock-line-1{display:flex;justify-content:space-between;align-items:baseline}
+.stock-line-2{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--sub);flex-wrap:wrap;gap:4px}
+.stock-hint{font-size:11px;color:var(--sub);background:var(--card-subtle);padding:3px 6px;border-radius:3px;margin-top:2px}
+
+/* ETF 穿透模块 (暗色模式完全修复) */
+.etf-block{
+  background:var(--card-subtle);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;
 }
-.p-row:last-child{border-bottom:none}
-.p-row:hover{background:#f8faff}
+.etf-block:last-child{margin-bottom:0}
+.etf-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.etf-title{font-size:13px;font-weight:800;color:var(--ink)}
+.etf-driving{font-size:11.5px;color:var(--ink);line-height:1.4}
+.etf-chips{display:flex;flex-wrap:wrap;gap:4px}
+.holding-chip{
+  display:inline-flex;align-items:center;gap:3px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:2px 6px;font-size:11px;color:var(--ink);
+}
 
-.p-col-main{display:flex;align-items:center;gap:8px}
-.p-name{font-weight:800;font-size:13.5px}
-.p-code{font-size:11.5px;color:var(--sub);font-family:var(--mono)}
-.p-tag{font-size:10.5px;background:var(--neubg);padding:1px 5px;border-radius:2px;color:var(--sub)}
-
-/* ETF 穿透子列表 */
-.etf-holdings-flex{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.etf-h-chip{display:inline-flex;align-items:center;gap:4px;background:#f8f9fa;border:1px solid var(--line);border-radius:var(--radius-sm);padding:2px 6px;font-size:11px}
-
-/* 5. 传导逻辑与因果情报卡片 (Flat & Clear) */
-.stream-list{display:flex;flex-direction:column;gap:12px}
+/* 5. 传导逻辑与因果情报流 (精炼卡片) */
+.stream-list{display:flex;flex-direction:column;gap:8px}
 .stream-card{
-  background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
-  border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);
+  background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:var(--radius);padding:10px 12px;
 }
-.stream-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.stream-title{font-size:13.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px}
-.stream-time{font-size:11.5px;color:var(--sub);font-family:var(--mono)}
-.stream-body{font-size:13.5px;line-height:1.6;color:var(--ink);margin:6px 0}
+.stream-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.stream-title{font-size:12.5px;font-weight:800;color:var(--ink)}
+.stream-body{font-size:12.5px;line-height:1.5;color:var(--ink);margin:4px 0}
 .stream-chain{
-  display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:#f8f9fa;
-  border-left:3px solid var(--accent);padding:6px 10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-  font-size:12px;margin:8px 0;
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px;background:var(--card-subtle);
+  padding:4px 8px;border-radius:var(--radius-sm);font-size:11.5px;margin-top:4px;
 }
 .chain-node{font-weight:600;color:var(--ink)}
-.chain-arr{color:var(--accent);font-weight:800}
+.chain-arr{color:var(--accent);font-weight:800;font-size:10px}
 
-/* 暗色模式适配 */
+/* ========================================================================= */
+/* 暗色模式适配 (Dark Mode) - 彻底移除硬编码，全变量映射与高对比度保证 */
+/* ========================================================================= */
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#0a0c10;--card:#12151c;--ink:#e6edf3;--sub:#8b949e;--line:#262c36;--line-subtle:#1b2028;
-    --up:#f85149;--upbg:#341315;--upborder:#671e21;
-    --down:#3fb950;--downbg:#0f2a17;--downborder:#1e4b2d;
-    --neu:#8b949e;--neubg:#1b2028;--neuborder:#30363d;
-    --wait:#d29922;--waitbg:#2e2008;--waitborder:#53380e;
-    --accent:#388bfd;--accentbg:#0d203f;--accentborder:#1f4277;
-    --live:#3fb950;--livebg:#0f2a17;
+    --bg:#0d1117;--card:#161b22;--card-subtle:#1c2128;--ink:#f0f6fc;--sub:#8b949e;
+    --line:#30363d;--line-subtle:#21262d;
+    --up:#f85149;--upbg:#3c1618;--upborder:#671e21;
+    --down:#3fb950;--downbg:#132d1d;--downborder:#1e4b2d;
+    --neu:#8b949e;--neubg:#21262d;--neuborder:#30363d;
+    --wait:#d29922;--waitbg:#342308;--waitborder:#53380e;
+    --accent:#58a6ff;--accentbg:#152238;--accentborder:#264168;
+    --purple:#bc8cff;--purplebg:#271033;--purpleborder:#532073;
+    --live:#3fb950;--livebg:#132d1d;
   }
-  .hero-matrix{background:linear-gradient(135deg, #12151c 0%, #101928 100%);border-color:#1f4277}
-  .cockpit-tabs{background:#0d1017}
-  .stream-chain,.p-row:hover,.etf-h-chip{background:#181d26}
+  body{background:var(--bg);color:var(--ink)}
+  .d-bullet.alert{color:#ffb4ab}
+  .matrix-highlight{color:#ffb4ab}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- 1. 全球市场时钟状态栏 (一眼看清全球交易时空) -->
+  <!-- 1. 全球市场时钟状态条 (一行紧凑横向滚动，移动端完美适配) -->
   <div class="market-pulse-bar">
-    <div class="pulse-title">
-      <span>🌐 全球市场交易时钟</span>
-      <span style="font-size:11px;color:var(--sub);font-weight:normal">2026-11-24 20:40 CST</span>
-    </div>
-    <div class="pulse-items">
-      <div class="pulse-item"><span class="badge b-closed">已收盘</span> 🇨🇳 A股 (15:00)</div>
-      <div class="pulse-item"><span class="badge b-closed">已收盘</span> 🇭🇰 港股 (16:00)</div>
-      <div class="pulse-item"><span class="badge b-closed">已收盘</span> 🇰🇷 首尔 (14:30)</div>
-      <div class="pulse-item pre"><span class="badge b-pre">⚡盘前活跃</span> 🇺🇸 美股 (美东 07:40)</div>
-      <div class="pulse-item live"><span class="dot-live"></span> 🟢 国际期指 / 夜盘</div>
+    <div class="pulse-title">⚡ 全球时钟</div>
+    <div class="pulse-scroll">
+      <span class="pulse-item"><span class="badge b-closed">收盘</span> 🇨🇳 A股 15:00</span>
+      <span class="pulse-item"><span class="badge b-closed">收盘</span> 🇭🇰 港股 16:00</span>
+      <span class="pulse-item"><span class="badge b-closed">收盘</span> 🇰🇷 首尔 14:30</span>
+      <span class="pulse-item pre"><span class="badge b-pre">⚡盘前</span> 🇺🇸 美股 07:45</span>
+      <span class="pulse-item live"><span class="dot-live"></span> 期货 交易中</span>
     </div>
   </div>
 
   <!-- 顶部主标题 -->
   <div class="top-header">
-    <div>
-      <h1 class="main-title">
-        <span>📊 财经快讯 · 持仓影响与明日预测</span>
-        <span class="node-badge">21:00 夜盘监测</span>
-      </h1>
-      <p class="lead-sub">
-        时段窗口：16:00–21:00 ｜ 围绕 A 股预测加分析 ｜ 遵循 A 股涨红跌绿规范
-      </p>
-    </div>
-    <div style="font-size:12px;color:var(--sub);text-align:right">
-      <span>数据经同花顺/腾讯/新浪美股盘前实盘核验</span>
-    </div>
+    <h1 class="main-title">
+      <span>📊 盯盘与明日预测</span>
+      <span class="node-badge">21:00 夜盘</span>
+    </h1>
+    <span class="header-meta">11-24 20:45 生成 ｜ 涨红跌绿</span>
   </div>
 
-  <!-- 2. 首屏决策黄金区：A股核心研判与推演决策舱 (Hero Matrix) -->
+  <!-- 2. 首屏决策黄金区：A股推演攻守矩阵 (精炼要点，首屏直达) -->
   <div class="hero-matrix">
     <div class="hero-head">
-      <div class="hero-title">
-        <span>🎯 明日 A 股核心推演与攻守矩阵 (Decision Matrix)</span>
-      </div>
-      <span class="hero-tag">夜盘定调 · 紧扣A股</span>
+      <span class="hero-title">🎯 明日 A 股核心推演决策 (Decision Matrix)</span>
+      <span class="badge b-live">围绕A股预测</span>
     </div>
 
-    <div class="matrix-grid">
-      <!-- 决策维度 1: 大盘开盘推演 -->
-      <div class="matrix-card">
-        <div class="matrix-label">
-          <span>🏛️ 明日大盘集合竞价预测</span>
+    <div class="decision-bullets">
+      <!-- 要点 1: 大盘开盘 -->
+      <div class="d-bullet">
+        <span class="d-tag">🏛️ 大盘开盘:</span>
+        <div>纳指期指回调但富时 A50 夜盘韧性，预测明日沪指 <b>3540–3555</b> 平开或微高开，早盘看内资放量，下方防守 <b>3530</b>。</div>
+      </div>
+      <!-- 要点 2: 板块排序 -->
+      <div class="d-bullet">
+        <span class="d-tag">🧭 板块序位:</span>
+        <div><b>芯片半导体 (领涨)</b> > <b>消费电子 (稳健)</b> > <b>证券大金融 (护盘)</b> > <b>工业有色 (震荡)</b>。苹果链受美股托底，周期品看夜盘期货。</div>
+      </div>
+      <!-- 要点 3: 重大跨市场催化 (高亮报警) -->
+      <div class="d-bullet alert">
+        <span class="d-tag" style="color:var(--up)">🔥 核心催化:</span>
+        <div>韩国重仓双雄 <b>SK海力士 (+6.73%)</b> 与 <b>三星电子 (+6.70%)</b> 暴涨超 6.7%，<b>强烈推演明日 09:30 中韩芯片 (513310) 跳空大幅高开</b>！</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 全球跨市场联动看板 (严格按：A股、港股、日韩、美股、期货 每类一行) -->
+  <div class="sec-head">
+    <span>🌐 全球大盘联动看板 (按市场分类分行)</span>
+    <span style="font-size:11px;color:var(--sub);font-weight:normal">标注各市场实际状态</span>
+  </div>
+
+  <div class="cat-rows">
+    <!-- 行 1: A股 -->
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span>🇨🇳 A 股核心指数</span>
+        <span class="badge b-closed">已收盘 15:00</span>
+      </div>
+      <div class="cat-row-chips">
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">上证指数</span>
+            <span class="t-chip-price">3,548.37</span>
+          </div>
+          <span class="badge tag-up">+0.27%</span>
         </div>
-        <div class="matrix-val">
-          结合纳指期货当前微调与富时 A50 夜盘韧性，明确推演明日上证指数在 <b>3540–3555</b> 区间平开或小幅微高开。早盘关键攻守在于开盘半小时内资放量意愿，下方关键支撑看 3530。
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">创业板指</span>
+            <span class="t-chip-price">2,278.45</span>
+          </div>
+          <span class="badge tag-up">+0.35%</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">科创50</span>
+            <span class="t-chip-price">1,250.60</span>
+          </div>
+          <span class="badge tag-up">+1.85%</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">深证成指</span>
+            <span class="t-chip-price">11,150.20</span>
+          </div>
+          <span class="badge tag-up">+0.42%</span>
         </div>
       </div>
+    </div>
 
-      <!-- 决策维度 2: 板块分化排序 -->
-      <div class="matrix-card">
-        <div class="matrix-label">
-          <span>🧭 板块强弱序位推演</span>
+    <!-- 行 2: 港股 -->
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span>🇭🇰 港股基准</span>
+        <span class="badge b-closed">已收盘 16:00</span>
+      </div>
+      <div class="cat-row-chips">
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">恒生指数</span>
+            <span class="t-chip-price">25,820.10</span>
+          </div>
+          <span class="badge tag-down">-0.45%</span>
         </div>
-        <div class="matrix-val">
-          <b>半导体芯片 (领涨催化)</b> > <b>消费电子/果链 (稳健)</b> > <b>证券大金融 (防守护盘)</b> > <b>工业有色 (整固)</b>。<br>
-          美股苹果盘前平稳托底歌尔股份；大宗商品夜盘震荡提示资源板块需保持耐心。
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">恒生科技</span>
+            <span class="t-chip-price">5,890.30</span>
+          </div>
+          <span class="badge tag-up">+0.12%</span>
         </div>
       </div>
+    </div>
 
-      <!-- 决策维度 3: 核心跨市场杀手级催化 -->
-      <div class="matrix-card" style="border-left:3px solid var(--up)">
-        <div class="matrix-label" style="color:var(--up)">
-          <span>🔥 核心跨市场催化 (重大机会)</span>
+    <!-- 行 3: 日韩 -->
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span>🇯🇵🇰🇷 日韩亚太</span>
+        <span class="badge b-closed">已收盘 14:30</span>
+      </div>
+      <div class="cat-row-chips">
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">韩国综合 (KOSPI)</span>
+            <span class="t-chip-price">2,650.40</span>
+          </div>
+          <span class="badge tag-up">+1.20%</span>
         </div>
-        <div class="matrix-val">
-          韩国核心重仓双雄 <b>SK海力士 (+6.73%)</b> 与 <b>三星电子 (+6.70%)</b> 首尔盘暴涨，两家在 <b>中韩芯片 (513310)</b> 权重超 32%，<b>强烈推演明日 09:30 中韩芯片 ETF 跳空大幅高开</b>！
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">日经225 (N225)</span>
+            <span class="t-chip-price">38,950.00</span>
+          </div>
+          <span class="badge tag-up">+0.85%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 行 4: 美股 -->
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span>🇺🇸 美股核心</span>
+        <span class="badge b-pre">⚡ 盘前实时 / 昨收</span>
+      </div>
+      <div class="cat-row-chips">
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">英伟达 (NVDA)</span>
+            <span class="t-chip-price">$155.58</span>
+          </div>
+          <span class="badge tag-down" title="美东实时盘前">-5.74% 盘前</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">拼多多 (PDD)</span>
+            <span class="t-chip-price">$85.34</span>
+          </div>
+          <span class="badge tag-down" title="美东实时盘前">-2.07% 盘前</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">苹果 (AAPL)</span>
+            <span class="t-chip-price">$228.10</span>
+          </div>
+          <span class="badge tag-down">-0.15% 盘前</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">纳斯达克 (IXIC)</span>
+            <span class="t-chip-price">24,345.54</span>
+          </div>
+          <span class="badge b-history" title="注意：这是昨常规收盘，非实时盘前">+6.51% 昨收</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 行 5: 期货/夜盘 -->
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span>🌐 全球期指 / 夜盘</span>
+        <span class="badge b-live"><span class="dot-live"></span> 实时交易中</span>
+      </div>
+      <div class="cat-row-chips">
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">纳指期货 (NQ)</span>
+            <span class="t-chip-price">26,293.94</span>
+          </div>
+          <span class="badge tag-down">-1.92% 实时</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">富时中国 A50</span>
+            <span class="t-chip-price">13,520.00</span>
+          </div>
+          <span class="badge tag-up">+0.15% 夜盘</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">标普期货 (ES)</span>
+            <span class="t-chip-price">5,995.50</span>
+          </div>
+          <span class="badge tag-down">-0.45% 实时</span>
+        </div>
+        <div class="t-chip">
+          <div class="t-chip-left">
+            <span class="t-chip-name">COMEX 黄金</span>
+            <span class="t-chip-price">$2,715.40</span>
+          </div>
+          <span class="badge tag-up">+0.32% 夜盘</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 3. 全球跨市场联动看板 (引入明确的时态微标，彻底解决不知道时间的问题) -->
-  <div class="sec-title">
-    <span>🌐 全球大盘与夜盘联动舱 (带有明确时态状态)</span>
-    <span style="font-size:12px;color:var(--sub);font-weight:normal">8 项核心指标实时对齐</span>
-  </div>
-
-  <div class="ticker-grid">
-    <!-- 标的 1: 实时期指 -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">纳指期货 (NQ)</span>
-        <span class="badge b-live"><span class="dot-live"></span> 实时交易</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">26,293.94</span>
-        <span class="ticker-chg chg-down">-1.92%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>全球电子盘</span>
-        <span>20:38:15 CST</span>
-      </div>
-    </div>
-
-    <!-- 标的 2: 夜盘A50 -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">富时中国A50</span>
-        <span class="badge b-live"><span class="dot-live"></span> 夜盘交易</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">13,520.00</span>
-        <span class="ticker-chg chg-up">+0.15%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>新加坡新交所</span>
-        <span>20:40:02 CST</span>
-      </div>
-    </div>
-
-    <!-- 标的 3: 美股盘前英伟达 -->
-    <div class="ticker-card" style="border-color:#fed7aa">
-      <div class="ticker-head">
-        <span class="ticker-name">英伟达 (NVDA)</span>
-        <span class="badge b-pre">⚡ 美股盘前</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">$155.58</span>
-        <span class="ticker-chg chg-down">-5.74%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>获利回吐 ｜ 拖累纳指</span>
-        <span>美东 07:22 EST</span>
-      </div>
-    </div>
-
-    <!-- 标的 4: 美股盘前拼多多 -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">拼多多 (PDD)</span>
-        <span class="badge b-pre">⚡ 美股盘前</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">$85.34</span>
-        <span class="ticker-chg chg-down">-2.07%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>中概中枢 ｜ 映射513050</span>
-        <span>美东 07:21 EST</span>
-      </div>
-    </div>
-
-    <!-- 标的 5: A股收盘 (历史基准) -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">上证指数</span>
-        <span class="badge b-closed">⚪ A股已收盘</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">3,548.37</span>
-        <span class="ticker-chg chg-up">+0.27%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>今日终盘</span>
-        <span>15:00:00 CST</span>
-      </div>
-    </div>
-
-    <!-- 标的 6: 港股收盘 (历史基准) -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">恒生指数</span>
-        <span class="badge b-closed">⚪ 港股已收盘</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">25,820.10</span>
-        <span class="ticker-chg chg-down">-0.45%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>今日终盘</span>
-        <span>16:00:00 CST</span>
-      </div>
-    </div>
-
-    <!-- 标的 7: 纳斯达克昨收 (必须标明是昨夜，避免误导) -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">纳斯达克 (IXIC)</span>
-        <span class="badge b-history">🟣 昨夜常规收盘</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">24,345.54</span>
-        <span class="ticker-chg chg-up">+6.51%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>非此时盘前 ｜ 昨常规盘</span>
-        <span>昨美东 16:00</span>
-      </div>
-    </div>
-
-    <!-- 标的 8: 国际大宗商品 -->
-    <div class="ticker-card">
-      <div class="ticker-head">
-        <span class="ticker-name">COMEX 黄金</span>
-        <span class="badge b-live"><span class="dot-live"></span> 国际夜盘</span>
-      </div>
-      <div class="ticker-price-row">
-        <span class="ticker-price">2,715.40</span>
-        <span class="ticker-chg chg-up">+0.32%</span>
-      </div>
-      <div class="ticker-foot">
-        <span>避险属性 ｜ 映射资源股</span>
-        <span>20:39:00 CST</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. 统一持仓透视与 Alpha 攻守看板 (彻底消除原有的重复双表) -->
-  <div class="sec-title">
-    <span>💼 持仓资产深度穿透与 Alpha 全貌 (二合一升级版)</span>
-    <span style="font-size:12px;color:var(--sub);font-weight:normal">无缝整合个股Alpha与ETF重仓</span>
+  <!-- 4. 持仓全景透视 (Tab 切换，移动端精炼卡片) -->
+  <div class="sec-head">
+    <span>💼 持仓穿透与 Alpha 全貌</span>
+    <span style="font-size:11px;color:var(--sub);font-weight:normal">点击切换持股/ETF</span>
   </div>
 
   <div class="cockpit-card">
     <div class="cockpit-tabs">
       <button class="cockpit-tab active" onclick="switchTab('tab-stocks')">A 股核心持股 (4只 · Alpha透视)</button>
-      <button class="cockpit-tab" onclick="switchTab('tab-etfs')">持仓 ETF 深度穿透 (5只 · 底层映射)</button>
+      <button class="cockpit-tab" onclick="switchTab('tab-etfs')">持仓 ETF 深度穿透 (5只 · 权重映射)</button>
     </div>
 
-    <!-- Tab 1: 个股 Alpha 透视 -->
+    <!-- Tab 1: 个股 Alpha 透视 (移动端高密度卡片) -->
     <div class="cockpit-content" id="tab-stocks">
-      <div style="font-size:12px;color:var(--sub);margin-bottom:10px">
-        💡 采用“个股涨跌幅 - 行业基准ETF涨跌幅”测算真实超额阿尔法（Alpha），右侧直连关联外盘夜盘动能：
-      </div>
-
       <!-- 歌尔股份 -->
-      <div class="p-row">
-        <div class="p-col-main">
-          <span class="p-name">歌尔股份</span>
-          <span class="p-code">002241</span>
-          <span class="badge b-closed">A股收盘</span>
+      <div class="stock-card-row">
+        <div class="stock-line-1">
+          <div>
+            <b>歌尔股份</b> <span class="code">002241</span>
+            <span class="badge b-closed">收盘</span>
+          </div>
+          <div>
+            <span class="price num">18.25</span>
+            <span class="badge tag-up">+3.40%</span>
+          </div>
         </div>
-        <div>
-          <span class="price num">18.25</span>
-          <span class="badge chg-up">+3.40%</span>
+        <div class="stock-line-2">
+          <span>基准: 消费电子ETF (+0.75%)</span>
+          <span class="badge" style="background:var(--accentbg);color:var(--accent);font-weight:700">超额 Alpha +2.65%</span>
+          <span>外盘: AAPL 盘前平</span>
         </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub)">基准: 消费电子ETF</span><br>
-          <span class="badge chg-up">+0.75%</span>
-        </div>
-        <div>
-          <span class="badge" style="background:#e8f0fe;color:#1967d2;font-weight:700">Alpha +2.65%</span><br>
-          <span style="font-size:11px;color:var(--sub)">外盘: AAPL 盘前平稳</span>
-        </div>
-        <div>
-          <span style="font-size:12px;color:#137333;font-weight:600">✓ 走出独立 Alpha 强势</span><br>
-          <span style="font-size:11px;color:var(--sub)">果链与VR订单逻辑确立，明日享受开盘溢价</span>
+        <div class="stock-hint">
+          💡 <b>明日策略:</b> 果链与VR订单逻辑确立，明日享受开盘溢价，冲高不盲追。
         </div>
       </div>
 
       <!-- 东方证券 -->
-      <div class="p-row">
-        <div class="p-col-main">
-          <span class="p-name">东方证券</span>
-          <span class="p-code">600958</span>
-          <span class="badge b-closed">A股收盘</span>
+      <div class="stock-card-row">
+        <div class="stock-line-1">
+          <div>
+            <b>东方证券</b> <span class="code">600958</span>
+            <span class="badge b-closed">收盘</span>
+          </div>
+          <div>
+            <span class="price num">9.88</span>
+            <span class="badge tag-up">+0.51%</span>
+          </div>
         </div>
-        <div>
-          <span class="price num">9.88</span>
-          <span class="badge chg-up">+0.51%</span>
+        <div class="stock-line-2">
+          <span>基准: 证券ETF (+0.20%)</span>
+          <span class="badge" style="background:var(--accentbg);color:var(--accent);font-weight:700">超额 Alpha +0.31%</span>
+          <span>外盘: A50夜盘微升</span>
         </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub)">基准: 证券ETF</span><br>
-          <span class="badge chg-up">+0.20%</span>
-        </div>
-        <div>
-          <span class="badge" style="background:#e8f0fe;color:#1967d2;font-weight:700">Alpha +0.31%</span><br>
-          <span style="font-size:11px;color:var(--sub)">外盘: A50夜盘微升</span>
-        </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub);font-weight:600">● 与行业基本同步</span><br>
-          <span style="font-size:11px;color:var(--sub)">大金融底仓防守，留意明日指数震荡时的护盘拉升</span>
+        <div class="stock-hint">
+          💡 <b>明日策略:</b> 大金融底仓防守，留意明日指数震荡时的护盘拉升。
         </div>
       </div>
 
       <!-- 赣锋锂业 -->
-      <div class="p-row">
-        <div class="p-col-main">
-          <span class="p-name">赣锋锂业</span>
-          <span class="p-code">002460</span>
-          <span class="badge b-closed">A股收盘</span>
+      <div class="stock-card-row">
+        <div class="stock-line-1">
+          <div>
+            <b>赣锋锂业</b> <span class="code">002460</span>
+            <span class="badge b-closed">收盘</span>
+          </div>
+          <div>
+            <span class="price num">34.60</span>
+            <span class="badge tag-down">-0.86%</span>
+          </div>
         </div>
-        <div>
-          <span class="price num">34.60</span>
-          <span class="badge chg-down">-0.86%</span>
+        <div class="stock-line-2">
+          <span>基准: 有色金属ETF (-1.10%)</span>
+          <span class="badge" style="background:var(--accentbg);color:var(--accent);font-weight:700">超额 Alpha +0.24%</span>
+          <span>外盘: 碳酸锂期货企稳</span>
         </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub)">基准: 有色金属ETF</span><br>
-          <span class="badge chg-down">-1.10%</span>
-        </div>
-        <div>
-          <span class="badge" style="background:#e8f0fe;color:#1967d2;font-weight:700">Alpha +0.24%</span><br>
-          <span style="font-size:11px;color:var(--sub)">外盘: ALB收盘/碳酸锂平稳</span>
-        </div>
-        <div>
-          <span style="font-size:12px;color:var(--wait);font-weight:600">● 弱势相对抗跌</span><br>
-          <span style="font-size:11px;color:var(--sub)">工业金属弱而能源金属抗跌，低位企稳观望</span>
+        <div class="stock-hint">
+          💡 <b>明日策略:</b> 能源金属抗跌性好于工业金属，低位企稳持股观望。
         </div>
       </div>
 
       <!-- 明阳智能 -->
-      <div class="p-row">
-        <div class="p-col-main">
-          <span class="p-name">明阳智能</span>
-          <span class="p-code">601615</span>
-          <span class="badge b-closed">A股收盘</span>
+      <div class="stock-card-row">
+        <div class="stock-line-1">
+          <div>
+            <b>明阳智能</b> <span class="code">601615</span>
+            <span class="badge b-closed">收盘</span>
+          </div>
+          <div>
+            <span class="price num">12.10</span>
+            <span class="badge tag-down">-1.30%</span>
+          </div>
         </div>
-        <div>
-          <span class="price num">12.10</span>
-          <span class="badge chg-down">-1.30%</span>
+        <div class="stock-line-2">
+          <span>基准: 绿电ETF (-0.80%)</span>
+          <span class="badge" style="background:var(--upbg);color:var(--up);font-weight:700">超额 Alpha -0.50%</span>
+          <span>外盘: 维斯塔斯微调</span>
         </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub)">基准: 绿电ETF</span><br>
-          <span class="badge chg-down">-0.80%</span>
-        </div>
-        <div>
-          <span class="badge" style="background:#fce8e6;color:#c5221f;font-weight:700">Alpha -0.50%</span><br>
-          <span style="font-size:11px;color:var(--sub)">外盘: 维斯塔斯微调</span>
-        </div>
-        <div>
-          <span style="font-size:12px;color:var(--sub);font-weight:600">▼ 跑输公用事业基准</span><br>
-          <span style="font-size:11px;color:var(--sub)">整机制造Beta偏大，静待海外海风招标订单兑现</span>
+        <div class="stock-hint">
+          💡 <b>明日策略:</b> 整机制造弹性偏大，持股等待欧洲海风订单开工催化。
         </div>
       </div>
     </div>
 
-    <!-- Tab 2: ETF 重仓穿透 (默认隐藏，点击切换) -->
+    <!-- Tab 2: ETF 重仓穿透 (纯 CSS 变量暗色适配，杜绝硬编码颜色) -->
     <div class="cockpit-content" id="tab-etfs" style="display:none">
-      <div style="font-size:12px;color:var(--sub);margin-bottom:10px">
-        💡 深度穿透跨境 ETF 底层重仓股真实表现（标明国旗与各市场实际营业状态）：
-      </div>
-
       <!-- 中韩芯片 -->
-      <div style="background:#fbfcfe;border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div>
-            <b style="font-size:14px">中韩芯片 ETF (513310)</b>
-            <span class="badge chg-up" style="margin-left:6px">1.285 (+2.15%) [今日终盘]</span>
-          </div>
-          <span class="badge b-live" style="background:#e8f0fe;color:#1967d2">明日预期：大幅高开 ★★★</span>
+      <div class="etf-block">
+        <div class="etf-top">
+          <span class="etf-title">中韩芯片 (513310) <span class="badge tag-up">1.285 (+2.15%) [收盘]</span></span>
+          <span class="badge b-live" style="background:var(--accentbg);color:var(--accent)">明日预期：大幅高开 ★★★</span>
         </div>
-        <div style="font-size:12.5px;color:var(--ink);margin:4px 0">
-          <b>驱动归因：</b> 韩国双巨头暴涨直接推高底层净值逾 2.1%，明日场内交易将迎强力估值修复与高开溢价。
+        <div class="etf-driving">
+          <b>驱动归因：</b> 韩国双巨头暴涨直接推高底层净值，明日开盘将迎强力估值修复。
         </div>
-        <div class="etf-holdings-flex">
-          <div class="etf-h-chip"><b>🇰🇷 SK海力士</b> (16.8%) <span class="badge chg-up">+6.73%</span> <span class="badge b-closed">首尔收盘</span> [美股:HXSCF]</div>
-          <div class="etf-h-chip"><b>🇰🇷 三星电子</b> (15.4%) <span class="badge chg-up">+6.70%</span> <span class="badge b-closed">首尔收盘</span> [美股:SSNLF]</div>
-          <div class="etf-h-chip"><b>🇨🇳 中芯国际</b> (9.2%) <span class="badge chg-up">+4.04%</span> <span class="badge b-closed">A股收盘</span></div>
-          <div class="etf-h-chip"><b>🇨🇳 北方华创</b> (7.5%) <span class="badge chg-up">+1.14%</span> <span class="badge b-closed">A股收盘</span></div>
-          <div class="etf-h-chip"><b>🇨🇳 海光信息</b> (5.4%) <span class="badge chg-up">+3.20%</span> <span class="badge b-closed">A股收盘</span></div>
+        <div class="etf-chips">
+          <span class="holding-chip"><b>🇰🇷 SK海力士</b> 16.8% <span class="badge tag-up">+6.73%</span> <span class="badge b-closed">首尔收盘</span></span>
+          <span class="holding-chip"><b>🇰🇷 三星电子</b> 15.4% <span class="badge tag-up">+6.70%</span> <span class="badge b-closed">首尔收盘</span></span>
+          <span class="holding-chip"><b>🇨🇳 中芯国际</b> 9.2% <span class="badge tag-up">+4.04%</span></span>
+          <span class="holding-chip"><b>🇨🇳 北方华创</b> 7.5% <span class="badge tag-up">+1.14%</span></span>
         </div>
       </div>
 
       <!-- 纳指基金 -->
-      <div style="background:#fbfcfe;border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div>
-            <b style="font-size:14px">纳指基金 ETF (513390)</b>
-            <span class="badge chg-up" style="margin-left:6px">1.450 (+0.80%) [今日终盘]</span>
-          </div>
-          <span class="badge b-pre" style="background:#fef7e0;color:#b06000">明日预期：溢价回踩 ⚠️</span>
+      <div class="etf-block">
+        <div class="etf-top">
+          <span class="etf-title">纳指基金 (513390) <span class="badge tag-up">1.450 (+0.80%) [收盘]</span></span>
+          <span class="badge b-pre">明日预期：溢价回踩 ⚠️</span>
         </div>
-        <div style="font-size:12.5px;color:var(--ink);margin:4px 0">
-          <b>驱动归因：</b> 第一大权重英伟达美股盘前回落 (-5.74%)，压制纳指期指走弱，警惕明日场内高溢价回吐。
+        <div class="etf-driving">
+          <b>驱动归因：</b> 英伟达盘前回踩 (-5.74%) 压制纳指期指走弱，警惕明日场内高溢价回吐。
         </div>
-        <div class="etf-holdings-flex">
-          <div class="etf-h-chip"><b>🇺🇸 英伟达</b> (8.9%) <span class="badge chg-down">-5.74%</span> <span class="badge b-pre">⚡ 美股盘前实时</span></div>
-          <div class="etf-h-chip"><b>🇺🇸 苹果</b> (8.7%) <span class="badge" style="background:#f1f3f4;color:#555">-0.15%</span> <span class="badge b-pre">⚡ 美股盘前</span></div>
-          <div class="etf-h-chip"><b>🇺🇸 微软</b> (7.8%) <span class="badge" style="background:#f1f3f4;color:#555">+0.20%</span> <span class="badge b-pre">⚡ 美股盘前</span></div>
+        <div class="etf-chips">
+          <span class="holding-chip"><b>🇺🇸 英伟达</b> 8.9% <span class="badge tag-down">-5.74% 盘前</span></span>
+          <span class="holding-chip"><b>🇺🇸 苹果</b> 8.7% <span class="badge tag-down">-0.15% 盘前</span></span>
+          <span class="holding-chip"><b>🇺🇸 微软</b> 7.8% <span class="badge tag-up">+0.20% 盘前</span></span>
         </div>
       </div>
 
       <!-- 工业有色 -->
-      <div style="background:#fbfcfe;border:1px solid var(--line);border-radius:var(--radius);padding:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div>
-            <b style="font-size:14px">工业有色 ETF (560860)</b>
-            <span class="badge chg-down" style="margin-left:6px">1.120 (-1.23%) [今日终盘]</span>
-          </div>
+      <div class="etf-block">
+        <div class="etf-top">
+          <span class="etf-title">工业有色 (560860) <span class="badge tag-down">1.120 (-1.23%) [收盘]</span></span>
           <span class="badge b-closed">明日预期：平开整固</span>
         </div>
-        <div style="font-size:12.5px;color:var(--ink);margin:4px 0">
-          <b>驱动归因：</b> 紫金矿业受工业金属周期回调整理，国际铜期货夜盘微幅震荡，暂无单边向上驱动。
+        <div class="etf-driving">
+          <b>驱动归因：</b> 紫金矿业及大宗商品回调牵引，夜盘伦铜震荡，暂无单边向上动能。
         </div>
-        <div class="etf-holdings-flex">
-          <div class="etf-h-chip"><b>🇨🇳 紫金矿业</b> (14.2%) <span class="badge chg-down">-4.33%</span> <span class="badge b-closed">A股收盘</span></div>
-          <div class="etf-h-chip"><b>🇨🇳 中国铝业</b> (9.1%) <span class="badge chg-down">-1.15%</span> <span class="badge b-closed">A股收盘</span></div>
-          <div class="etf-h-chip"><b>🌐 伦敦铜 (LME)</b> <span class="badge chg-up">+0.25%</span> <span class="badge b-live">🟢 国际夜盘</span></div>
+        <div class="etf-chips">
+          <span class="holding-chip"><b>🇨🇳 紫金矿业</b> 14.2% <span class="badge tag-down">-4.33%</span></span>
+          <span class="holding-chip"><b>🇨🇳 中国铝业</b> 9.1% <span class="badge tag-down">-1.15%</span></span>
+          <span class="holding-chip"><b>🌐 伦敦铜</b> <span class="badge tag-up">+0.25% 夜盘</span></span>
+        </div>
+      </div>
+
+      <!-- 中概互联 -->
+      <div class="etf-block">
+        <div class="etf-top">
+          <span class="etf-title">中概互联 (513050) <span class="badge tag-down">1.095 (-0.45%) [收盘]</span></span>
+          <span class="badge b-closed">明日预期：跟随港股</span>
+        </div>
+        <div class="etf-driving">
+          <b>驱动归因：</b> 拼多多美股盘前调整 (-2.07%)，港股腾讯平稳，预计明日窄幅波动。
+        </div>
+        <div class="etf-chips">
+          <span class="holding-chip"><b>🇭🇰 腾讯控股</b> 28.4% <span class="badge tag-neu">平收</span></span>
+          <span class="holding-chip"><b>🇺🇸 拼多多</b> 12.1% <span class="badge tag-down">-2.07% 盘前</span></span>
+          <span class="holding-chip"><b>🇭🇰 阿里巴巴</b> 21.6% <span class="badge tag-down">-0.80%</span></span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 5. 传导逻辑与因果情报流 (卡片化轻量呈现) -->
-  <div class="sec-title">
-    <span>🧠 核心因果传导与情报流 (Causality Stream)</span>
-    <span style="font-size:12px;color:var(--sub);font-weight:normal">3 组高确定性推演链条</span>
+  <!-- 5. 传导逻辑与因果情报流 (轻量卡片，阅读负担极低) -->
+  <div class="sec-head">
+    <span>🧠 核心因果传导情报流</span>
+    <span style="font-size:11px;color:var(--sub);font-weight:normal">高确定性逻辑</span>
   </div>
 
   <div class="stream-list">
     <!-- 卡片 1 -->
     <div class="stream-card">
       <div class="stream-head">
-        <div class="stream-title">
-          <span class="node-badge" style="background:#137333">推演 M01</span>
-          <span>【全球期指夜盘异动与明日 A 股大盘开盘预测】</span>
-        </div>
-        <span class="stream-time">21:00 夜盘监测 ｜ 来源: 新浪/富时A50</span>
+        <span class="stream-title">推演 M01 · 【期指夜盘异动与明日大盘开盘预测】</span>
+        <span class="time" style="font-size:11px;color:var(--sub)">21:00</span>
       </div>
       <div class="stream-body">
-        纳指期货 NQ (-1.92%) 虽在美股盘前受科技股获利回吐扰动，但富时中国 A50 夜盘 (+0.15%) 与离岸人民币保持坚韧。预测明日 A 股三大指数集合竞价将呈现平开或小幅微高开，日内重点防守位在上证指数 3530 点，科技成长主线具备较强防守反击动能。
+        纳指期货 NQ (-1.92%) 盘前回吐前期涨幅，但富时中国 A50 夜盘 (+0.15%) 与离岸汇率平稳。预测明日 A 股三大指数集合竞价平开或小幅微高开，早盘成长股有望率先发力。
       </div>
       <div class="stream-chain">
-        <span style="color:var(--sub);font-weight:600">传导链：</span>
-        <span class="chain-node">美股盘前获利回吐</span>
+        <span style="color:var(--sub)">传导：</span>
+        <span class="chain-node">美股盘前科技回踩</span>
         <span class="chain-arr">➔</span>
-        <span class="chain-node">外盘期指消化预期</span>
-        <span class="chain-arr">➔</span>
-        <span class="chain-node">富时A50夜盘韧性</span>
+        <span class="chain-node">A50夜盘坚韧</span>
         <span class="chain-arr">➔</span>
         <span class="chain-node">明日A股平稳开盘定调</span>
       </div>
@@ -602,30 +607,25 @@ body{margin:0;padding:20px 16px 80px;background:var(--bg);color:var(--ink);font:
     <!-- 卡片 2 -->
     <div class="stream-card" style="border-left-color:var(--up)">
       <div class="stream-head">
-        <div class="stream-title">
-          <span class="node-badge" style="background:var(--up)">推演 M02</span>
-          <span>【韩国存储双雄暴涨对明日中韩芯片 ETF 的确定性催化】</span>
-        </div>
-        <span class="stream-time">21:00 夜盘监测 ｜ 来源: 首尔交易所/彭博</span>
+        <span class="stream-title" style="color:var(--up)">推演 M02 · 【韩国双雄暴涨催化中韩芯片明日高开】</span>
+        <span class="time" style="font-size:11px;color:var(--sub)">21:00</span>
       </div>
       <div class="stream-body">
-        韩国首尔交易所日间 SK海力士 (+6.73%) 与三星电子 (+6.70%) 暴涨，两家公司美股 OTC 存托凭证 (HXSCF/SSNLF) 维持强预期。作为底层权重超 32% 的境内中韩芯片 ETF (513310)，明日开盘大概率大幅高开并引发场内溢价抢筹。
+        韩国首尔交易所 SK海力士 (+6.73%) 与三星电子 (+6.70%) 暴涨，两家在境内中韩芯片 ETF (513310) 权重超 32%。强烈推演明日 09:30 中韩芯片跳空高开并享有场内溢价。
       </div>
       <div class="stream-chain">
-        <span style="color:var(--sub);font-weight:600">传导链：</span>
+        <span style="color:var(--sub)">传导：</span>
         <span class="chain-node">HBM与存储周期反转</span>
         <span class="chain-arr">➔</span>
         <span class="chain-node">韩股双雄暴涨6.7%+</span>
-        <span class="chain-arr">➔</span>
-        <span class="chain-node">底层资产净值实质性跳升</span>
         <span class="chain-arr">➔</span>
         <span class="chain-node">明日09:30中韩芯片跳空高开</span>
       </div>
     </div>
   </div>
 
-  <div style="margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--sub);text-align:center">
-    本页面为 Antigravity 自动化监控组件全新重构版（v2.0 原型演示），行情数据已自动对齐各市场实际营业时区与时态。以上为公开信息汇总，不构成投资建议。
+  <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--sub);text-align:center">
+    本页面为 Antigravity 自动化监控组件重构版 (v2.1 原型)。公开信息汇总，不构成投资建议。
   </div>
 
 </div>
