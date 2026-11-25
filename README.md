@@ -1,12 +1,14 @@
 # Static Pages · 静态发布与预览
 
-本仓库托管已生成的静态网页，提供 PR 在线预览、正式部署和版本验收。页面制作与 Agent 技能由 [FlowKit](https://github.com/wvliteam/flowkit) 维护；本仓库不再分发业务 skill。
+本仓库统一托管已生成的报告、独立页面和静态工具，提供 PR 在线预览、正式部署和版本验收。页面制作与业务数据处理在交付前完成。
 
 - [正式页面目录](https://wvliteam.github.io/static-pages/)
 - [发布与维护指南](CONTRIBUTING.md)
 - [Agent 工作约定](AGENTS.md)
 - [部署工作流](https://github.com/wvliteam/static-pages/actions/workflows/pages.yml)
 - [线上版本记录](https://wvliteam.github.io/static-pages/deployment.json)
+
+页面目录统一在站点首页维护；本文件介绍仓库定位、结构和用法。
 
 ## 发布已有页面
 
@@ -21,9 +23,9 @@ python3 scripts/verify_artifact_manifest.py --root artifacts/example-page/public
 
 同仓库、base=main、分支为 preview/<task> 的 PR 会被组合进站点。预览 URL、head SHA 和文件哈希以成功部署的摘要及 deployment.json 为准。确认具体版本后，将干净产物迁到 docs，移除 tracked artifacts，检查并合并。
 
-普通页面默认先预览后正式收录。已有持续授权的金融自动报告可由 FlowKit 的 report-publisher 直接更新其归档和首页索引；这不构成其他页面绕过预览的授权。
+目录、授权与确认要求见 [Agent 工作约定](AGENTS.md)。
 
-## 保留的发布设施
+## 仓库结构
 
 | 位置 | 职责 |
 | --- | --- |
@@ -33,22 +35,11 @@ python3 scripts/verify_artifact_manifest.py --root artifacts/example-page/public
 | scripts/build_pages.py、stage_pages.py | 组合正式源与活动预览，保存生成站点 |
 | scripts/check_candidate.py | 固定 Git 版本的候选与合并就绪检查 |
 | scripts/ 内的四个校验工具 | 本地检查、摘要核对、批准版本迁移与线上验收 |
-| scripts/flowkit-checks.json | 校验工具来源、固定内容版本与哈希 |
 | tests/ | 独立的发布设施回归测试 |
 | scratch/ | 忽略的本地日志、数据和截图 |
 
-CI 只运行可信 main 的部署代码，按精确 PR head SHA 读取静态文件；不会执行 PR 构建脚本。main/docs 不得包含 previews、artifacts 或 deployment.json 保留路径。gh-pages 是生成快照，不能手动编辑或合入 main。
+发布工作流组合正式内容和符合条件的 PR 预览，独立候选工作流检查候选版本。权限与隔离规则见 [发布基础设施](AGENTS.md#发布基础设施)。预览链接公开可达，noindex 不提供访问控制。
 
-预览链接公开可达，noindex 不提供访问控制。只有当前部署运行成功且版本和文件核对通过，才算上线。
+## 维护资料
 
-## 已发布页面
-
-| 页面 | 内容 |
-| --- | --- |
-| [513310 · 2026年11月20日收盘复盘](https://wvliteam.github.io/static-pages/reports/513310/2026-11-20/) | 分时与日 K、量能、溢价、关键价位和情景计算器 |
-
-## 技能与开发资料
-
-页面创建和发布技能的唯一维护位置是 FlowKit 的 skills/static-page-builder 与 skills/static-page-publisher；安装与使用见 [FlowKit](https://github.com/wvliteam/flowkit)。本仓库不需要安装它们即可检查和部署。
-
-维护校验工具时，先在 FlowKit 修改源码并测试，再显式同步固定快照；步骤见 [使用指南](CONTRIBUTING.md#7-校验工具与技能边界)。现有 .agents/skills/openspec-* 仅服务本仓库基础设施开发，继续保留。历史方案与规范位于 design/ 和 openspec/，不作为网页部署。
+校验工具和部署脚本随仓库固定版本运行，来源记录和文件哈希用于核对校验工具的版本。维护方法见 [使用指南](CONTRIBUTING.md#7-校验工具与自动报告)。

@@ -1,6 +1,6 @@
 # 使用与维护指南
 
-本指南适用于 `wvliteam/static-pages`。项目概览见 [README](README.md)，agent 开始任务前还应读取 [AGENTS.md](AGENTS.md)。以下命令除克隆、安装外，均在仓库根目录执行；示例任务名为 `example-page`，执行时替换为本次名称。
+本指南提供 `wvliteam/static-pages` 的操作命令与排错方法。项目概览见 [README](README.md)；目录、授权、确认与验收规则统一见 [AGENTS.md](AGENTS.md)。以下命令均在仓库根目录执行；示例任务名为 `example-page`，执行时替换为本次名称。
 
 ## 1. 准备环境
 
@@ -17,15 +17,13 @@ git switch -c preview/example-page
 mkdir -p artifacts/example-page/public scratch
 ```
 
-任务名须匹配 `[a-z0-9][a-z0-9-]{0,79}`，如 `daily-review`；分支名必须以 `preview/` 开头。分支名和任务名可以不同，网址中的任务名来自 `artifacts/<task>/public/`，建议保持一致。一个 PR 可含多个任务，但通常一项审阅任务使用一个 PR 更清楚。
+任务命名与存放要求见 [页面与目录边界](AGENTS.md#页面与目录边界)。网址中的任务名取自产物目录，示例中与分支名保持一致。
 
 ## 2. 接收静态产物
 
-将已有的 index.html、HTML/CSS/JavaScript 和必要资源放入 artifacts/example-page/public/。页面创作、数据核验和交互设计由调用方完成；需要相关技能时使用 FlowKit 的 static-page-builder。
+将已有的 index.html、HTML/CSS/JavaScript 和必要资源放入 artifacts/example-page/public/。页面创作、数据核验和交互检查由交付方在提交前完成。
 
 框架项目先在本地构建，再交付静态产物；本仓库不会运行 PR 构建代码。HTML 使用 UTF-8，包含 html、head、body、标题和移动视口。使用适合嵌套预览路径的相对资源链接。预览横幅由部署注入，源文件不手写 data-static-preview 标记。
-
-原始数据、截图和日志放忽略的 scratch/ 或仓库外。public 只含将公开浏览的文件。
 
 ## 3. 本地检查
 
@@ -76,7 +74,7 @@ gh pr create --base main --head preview/example-page \
 https://wvliteam.github.io/static-pages/previews/pr-<PR编号>/example-page/
 ```
 
-必须是同仓库、指向 main、分支前缀为 `preview/` 的打开状态 PR。仅创建分支或推送到普通分支不会产生预览；fork PR 不参与本流程。预览横幅显示 PR 编号、任务名和版本前 7 位，并带审阅记录链接；预览不进入正式导航。
+预览资格和隔离规则见 [预览与正式收录](AGENTS.md#预览与正式收录)。横幅显示 PR 编号、任务名和版本前 7 位，并带审阅记录链接。
 
 继续审阅时，修改同一分支的页面、重新检查、提交并推送即可，PR 的新 head SHA 会触发重建。预览使用同一个 URL，版本是否更新要以部署记录为准。
 
@@ -99,7 +97,7 @@ python3 scripts/verify_deployment.py \
 
 ## 5. 确认后正式发布
 
-先记录用户批准的预览 SHA。此后若实质修改内容，应重新提供对应预览；不要将未审阅的新内容混入正式版本。对于当前会话已经批准的相同产出，无需重复申请。
+按 [预览与正式收录](AGENTS.md#预览与正式收录) 取得具体版本的确认后，记录完整预览 head SHA，下文以 `APPROVED_PREVIEW_SHA` 引用。
 
 在原 PR 分支操作，将批准的干净源文件移到正式目录。普通页面示例：
 
@@ -120,15 +118,9 @@ python3 scripts/compare_promotion.py \
 
 比较器从指定 SHA 的 Git archive 读取预览源，不使用当前工作树中可能已变化的草稿。目标需与批准产物拥有相同相对路径及字节；任何新增、缺失或修改都在合并前处理。
 
-| 页面类型 | 正式源路径 | 正式网址后缀 |
-| --- | --- | --- |
-| 日期报告 | `docs/reports/<代码>/<YYYY-MM-DD>/index.html` | `reports/<代码>/<YYYY-MM-DD>/` |
-| 普通页面 | `docs/pages/<名称>/index.html` | `pages/<名称>/` |
-| 静态工具 | `docs/tools/<名称>/index.html` | `tools/<名称>/` |
+按 [页面与目录边界](AGENTS.md#页面与目录边界) 选择正式路径。上述移动命令用于新增目录；更新已有页面时检查实际目标，仅应用本次变更。不要从在线预览下载带横幅的 HTML 作为正式源文件。
 
-上述移动命令用于新增目录；更新已有页面时检查并迁入对应位置，避免覆盖其他文件。不要从在线预览下载带横幅的 HTML 作为正式源文件。保留历史报告日期，不用其他交易日内容覆盖旧快照。
-
-更新 `docs/index.html` 的链接和页面数量（如有），并更新 README 的已发布页面列表。在任务的全部 `artifacts/` 文件清理完成前不要合并；main 禁止存在任何跟踪的草稿文件。无文件的本地空目录不会进入 Git。
+更新 `docs/index.html` 的链接和页面数量（如有），再检查迁移后的文件和暂存范围：
 
 ```bash
 python3 scripts/check_static_html.py \
@@ -136,7 +128,7 @@ python3 scripts/check_static_html.py \
   --require-homepage-link --output scratch/example-page-formal-local.json
 git ls-files artifacts
 git diff --check
-git add docs/index.html docs/pages/example-page README.md
+git add docs/index.html docs/pages/example-page
 git diff --cached --stat
 git commit -m "Publish approved example page"
 git push
@@ -185,27 +177,19 @@ python3 scripts/verify_deployment.py \
 
 放弃草稿时关闭 PR；预览会在下一次成功部署中移除，源分支是否保留可按需要决定。关闭不会自动删除已合入 main 的正式页面。
 
-撤回正式页面时，通过新的提交删除对应 `docs/` 页面并更新导航和 README；撤销错误修改时可对相关提交做有针对性的 revert。不要改写共享 main 历史、重置其他页面，或直接修改 `gh-pages`。部署后再次核对版本和页面可达性。
+撤回正式页面时，通过新提交删除对应 `docs/` 页面并更新站点导航；撤销错误修改时可对相关提交做定向 revert。操作边界见 [开始任务](AGENTS.md#开始任务)，之后重新运行部署校验。
 
-## 7. 校验工具与技能边界
+## 7. 校验工具与自动报告
 
-页面创建和发布的 Agent 技能在 [FlowKit](https://github.com/wvliteam/flowkit) 维护，安装源改为 wvliteam/flowkit 的 skills/static-page-builder 和 skills/static-page-publisher。本仓库部署不需要技能安装，也不需要相邻 FlowKit 检出。
+本地检查、产物复核、迁移比较与部署验收均使用本仓库 scripts 中的工具，无需安装页面生成工具或检出其他项目。
 
-scripts 中 check_static_html.py、verify_artifact_manifest.py、compare_promotion.py 和 verify_deployment.py 是固定校验快照。flowkit-checks.json 记录各文件来源路径、SHA-256 和由完整来源清单计算的内容版本。维护时先在 FlowKit 修改并测试，再从 FlowKit 根目录显式运行：
+check_static_html.py、verify_artifact_manifest.py、compare_promotion.py 和 verify_deployment.py 使用固定版本，scripts 中的来源清单记录各文件来源路径、SHA-256 和由完整来源清单计算的内容版本。
 
-~~~bash
-python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --check
-python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --write
-python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --check
-~~~
-
---write 只更新这四个文件及清单，执行前先检查目标文件的本机改动。两仓库分别审阅、提交；CI 只验证本地快照，不在部署时下载最新技能。历史设计与规范中的旧路径作为历史记录保留。
+维护校验工具时，先检查本机改动，按来源记录取得明确版本的脚本与匹配清单，审阅差异和兼容性后一起更新。运行下一节的回归测试，确认脚本字节与清单一致，并在同一 PR 中说明来源版本、变更和检查结果。CI 只验证仓库内固定副本，不在部署时下载最新代码。
 
 ### 已授权金融自动报告
 
-普通页面仍遵循预览确认流程。FlowKit financial-flash-pipeline 在既有持续授权范围内，可通过 report-publisher 直接提交 docs/reports/portfolio-flash/<日期>/<观测时间>/index.html 和首页索引。自动报告逐条登记首页，不要求每轮更新 README。扩大内容范围、其他页面或缺少持续授权时回到默认预览流程；分支保护仍须遵守。
-
-自动发布也使用本仓库 Pages 工作流。FlowKit 先核对本次 main push 对应的成功运行，再核对 deployment.json 的 main_sha 和线上/本地文件字节，之后才通知。仅 Git push 成功不代表部署成功。站点地址优先显式配置，其次 docs/CNAME，最后 GitHub origin 项目地址；调用方应传入实际基地址。
+持续授权与可写范围见 [已授权自动报告](AGENTS.md#已授权自动报告)。自动任务复用 [正式部署校验](#校验正式部署) 的命令，将本次 main push 的完整 SHA 传给 `--main-sha`，保存对应运行与验收结果。通知条件见 [验证与交付](AGENTS.md#验证与交付)。
 
 ## 8. 维护工作流与测试
 
@@ -215,33 +199,9 @@ python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --c
 python3 -m unittest discover -s tests -v
 ```
 
-修改工作流、发布脚本或检查器时运行相关测试；工作流每次也会执行完整测试。仅修改说明文档时，检查链接、命令参数和 `git diff --check` 即可。部分 Andronix 环境的裸仓库推送测试会跳过，GitHub Ubuntu runner 负责执行该项。
+检查类型按 [验证与交付](AGENTS.md#验证与交付) 选择。仅文档改动使用 `git diff --check`，并核对本地链接和命令入口。部分 Andronix 环境的裸仓库推送测试会跳过，GitHub Ubuntu runner 负责执行该项。
 
-| 文件 | 作用 |
-| --- | --- |
-| [pages.yml](.github/workflows/pages.yml) | 触发、权限、串行构建与官方 Pages 部署 |
-| [build_pages.py](scripts/build_pages.py) | 读取 main/docs 和全部符合条件的打开状态 PR，生成完整站点与 manifest |
-| [stage_pages.py](scripts/stage_pages.py) | 把完整产物提交到生成的 gh-pages 分支 |
-| [test_pages.py](tests/test_pages.py) | 目录隔离、预览注入、资源和部署组合规则 |
-| [test_staging.py](tests/test_staging.py) | 生成分支的创建与更新 |
-| [test_skill_checks.py](tests/test_skill_checks.py) | 本地检查器与线上版本校验器 |
-
-PR 事件执行的测试来自 main，不会测试 PR 内改动后的发布代码。维护基础设施时应先在本地运行相应测试，不把在线静态预览当作新脚本的验证结果。
-
-### 使用 OpenSpec
-
-门户能力、复杂静态工具和发布基础设施的行为变更使用 OpenSpec。定期更新报告、修改文案或微调样式沿用现有页面制作和发布流程。[门户设计](design/static-portal/README.md) 可直接作为提案的依据。
-
-仓库已包含 `.agents/skills/` 下的 Codex 集成和 `openspec/config.yaml`，克隆后无需重新初始化。开发环境可安装本仓库试用的 [OpenSpec 2.1.1](https://github.com/Fission-AI/OpenSpec/releases/tag/v2.1.1)；使用 npm 时，该版本要求 [Node.js 22.20.0 或更高](https://github.com/Fission-AI/OpenSpec/blob/v2.1.1/package.json)。
-
-```bash
-npm install -g @fission-ai/openspec@2.1.1
-openspec validate --all --strict --no-interactive
-```
-
-在 Codex 中使用 `$openspec-propose` 创建提案、设计、规范和任务，审阅后用 `$openspec-apply-change` 实施。完成检查后用 `$openspec-archive-change` 归档并更新 `openspec/specs/`，再运行一次严格校验。新增能力应在增量规范中填写有实际内容的 `## Purpose`，避免归档后留下占位说明。现行行为以 [能力规范](openspec/specs/candidate-validation/spec.md) 和仓库约定为准；历史提案在 `openspec/changes/archive/`。变更 OpenSpec 版本时，在独立分支审阅 `openspec update` 生成的文件。
-
-规范校验只检查规范素材。页面检查、预览确认的 head SHA、草稿迁移及正式部署核对仍按本指南执行。Pages 和候选验证工作流均无需额外安装 OpenSpec 或 Node.js。
+[Pages 工作流](.github/workflows/pages.yml) 中的测试使用可信 main 的代码；独立的低权限候选工作流测试 PR 对应的合并候选版本。在线静态预览不能替代发布脚本的回归测试。
 
 ### 候选检查和合并就绪
 
@@ -252,14 +212,13 @@ openspec validate --all --strict --no-interactive
 | `static-pages-candidate` | 对测试合并提交运行 Python 测试并检查全部正式 HTML；对 PR head 的归档检查所有预览任务、入口和直接资源。 |
 | `static-pages-main-ready` | 检查完整的测试合并树中是否仍跟踪 `artifacts/` 文件，不受分支名或未跟踪本地文件影响。 |
 
-检查日志记录事件 base、PR head 和测试合并提交。有效预览的候选检查可以通过，同时合并就绪检查会因草稿仍在而失败；按现有流程确认并迁移后再看新的检查结果。候选检查不运行浏览器、不解析所有间接资源，也不向 Pages 提供任何部署权限。PR 有合并冲突时先解决冲突，再重跑检查。当前实现只报告结果；是否强制通过取决于仓库的合并规则。
+检查日志记录事件 base、PR head 和测试合并提交；无法取得指定 Git 对象或提交版本关系不符时，检查失败，不改用分支最新版本。有效预览的候选检查可以通过，同时合并就绪检查会因草稿仍在而失败；按现有流程确认并迁移后再看新的检查结果。候选工作流仅授予 `contents: read`，不运行浏览器、不解析所有间接资源，也不向 Pages 提供任何部署权限。PR 有合并冲突时先解决冲突，再重跑检查。当前实现只报告结果；是否强制通过取决于仓库的合并规则。
 
-本地可用和 CI 一样的命令验证：先检出事件对应的测试合并提交并获取其两个父提交；事件 JSON 放在 `scratch/pr-event.json`，需要 `pull_request.number`、`base.ref`、`base.sha` 和 `head.sha`（后三项位于 `pull_request` 内）。
+本地可先运行下面的候选检查，再运行本节开头的回归测试。检出事件对应的测试合并提交并获取其两个父提交；事件 JSON 放在 `scratch/pr-event.json`，需要 `pull_request.number`、`base.ref`、`base.sha` 和 `head.sha`（后三项位于 `pull_request` 内）。
 
 ```bash
 python3 scripts/check_candidate.py candidate --event-path scratch/pr-event.json --candidate-sha "$(git rev-parse HEAD)"
 python3 scripts/check_candidate.py main-ready --event-path scratch/pr-event.json --candidate-sha "$(git rev-parse HEAD)"
-python3 -m unittest discover -s tests -v
 ```
 
 回退候选检查时，移除独立工作流及其脚本即可；如果之后已将检查设为必需，先调整对应仓库规则。Pages 发布不依赖候选工作流。
@@ -281,8 +240,8 @@ python3 -m unittest discover -s tests -v
 - PR 下载归档上限 50 MiB；单个 PR 内被选中的全部预览文件合计不超过 20 MiB、1000 个文件。
 - 预览只接收符合目录规则的普通文件；拒绝符号链接、硬链接、隐藏路径、路径越界和重复文件。
 - 一个任务缺少 `public/index.html` 时记入 `deployment.json` 的 `skipped`，暂不生成该任务；非法路径或超限等错误会使构建失败。
-- 正式源不允许符号链接；`docs/previews`、`docs/artifacts`、`docs/deployment.json` 保留给部署使用。
-- PR 文件只作为静态数据读取；可信代码来自 main。不得在带写权限的 `pull_request_target` 中检出并执行 PR 脚本或安装其依赖。
+
+目录和执行权限边界见 [发布基础设施](AGENTS.md#发布基础设施)。
 
 `deployment.json` 的 `main_sha` 标识正式源，`production_sha256` 按正式相对路径记录文件哈希，`previews` 记录 PR、分支、head SHA、任务 URL 与生成文件哈希，`skipped` 记录未就绪任务。它由工作流生成，不要手动编辑。
 
