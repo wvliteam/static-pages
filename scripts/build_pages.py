@@ -17,7 +17,7 @@ import re
 import shutil
 import subprocess
 import tarfile
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from urllib.request import Request, urlopen
 
 MAX_ARCHIVE = 50 * 1024 * 1024
@@ -176,14 +176,28 @@ def assemble(root: Path, output: Path, pulls: list[dict], repository: str,
     return manifest
 
 
+def site_base_url(root: Path, repository: str, explicit: str | None = None) -> str:
+    if explicit:
+        value = explicit.rstrip('/') + '/'
+    elif (root / 'docs/CNAME').is_file():
+        value = 'https://' + (root / 'docs/CNAME').read_text().strip() + '/'
+    else:
+        owner, name = repository.split('/')
+        value = f'https://{owner}.github.io/' + ('' if name.lower() == f'{owner}.github.io'.lower() else quote(name) + '/')
+    parsed = urlsplit(value)
+    if (parsed.scheme not in {'http', 'https'} or not parsed.netloc or parsed.username
+            or parsed.password or parsed.query or parsed.fragment):
+        raise ValueError('Expected a credential-free HTTP(S) site base URL')
+    return value
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     root = Path.cwd()
     repository = os.environ['GITHUB_REPOSITORY']
-    owner, name = repository.split('/')
-    base_url = f'https://{owner}.github.io/{quote(name)}/'
+    base_url = site_base_url(root, repository, os.environ.get('STATIC_PAGES_BASE_URL'))
     client = GitHub(repository, os.environ['GH_TOKEN'])
     manifest = assemble(root, args.output, client.pulls(), repository, client.archive,
                         git('rev-parse', 'HEAD'), base_url)

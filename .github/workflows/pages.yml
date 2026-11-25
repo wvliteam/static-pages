@@ -14,6 +14,9 @@ concurrency:
   group: static-pages-deployment
   cancel-in-progress: false
 
+env:
+  STATIC_PAGES_BASE_URL: ${{ vars.STATIC_PAGES_BASE_URL }}
+
 permissions: {}
 
 jobs:

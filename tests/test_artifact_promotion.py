@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-VERIFY = ROOT / 'skills/static-page-publisher/scripts/verify_artifact_manifest.py'
-COMPARE = ROOT / 'skills/static-page-publisher/scripts/compare_promotion.py'
+VERIFY = ROOT / 'scripts/verify_artifact_manifest.py'
+COMPARE = ROOT / 'scripts/compare_promotion.py'
 spec = importlib.util.spec_from_file_location('verify_artifact_manifest', VERIFY)
 manifest = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = manifest

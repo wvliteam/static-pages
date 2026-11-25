@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -51,7 +52,8 @@ class CandidateTests(unittest.TestCase):
         self.write("event.json", json.dumps(self.event))
         command = [sys.executable, str(CHECKER), mode, "--event-path", "event.json",
                    "--candidate-sha", self.candidate]
-        run = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
+        env = dict(os.environ, GITHUB_REPOSITORY='test/static-pages', STATIC_PAGES_BASE_URL='')
+        run = subprocess.run(command, cwd=self.root, env=env, capture_output=True, text=True)
         self.assertEqual(run.returncode, expected, run.stdout + run.stderr)
         return json.loads(run.stdout)
 
@@ -65,6 +67,13 @@ class CandidateTests(unittest.TestCase):
         self.assertEqual(result["tested_merge_sha"], self.candidate)
         self.assertIn("demo", result["previews"])
         self.assertEqual(self.check("main-ready", 1)["tracked_artifacts"], [PREVIEW])
+
+    def test_custom_domain_preview_resources_are_checked_at_root_base_path(self):
+        self.write('docs/CNAME', 'pages.example.test')
+        self.write(PREVIEW, HTML.format('<a href="/previews/pr-12/demo/#x" id="x">Anchor</a>'))
+        self.commit('Custom domain preview')
+        self.merge()
+        self.assertIn('demo', self.check()['previews'])
 
     def test_promoted_candidate_ignores_untracked_drafts(self):
         self.write(PREVIEW, HTML.format("Preview"))

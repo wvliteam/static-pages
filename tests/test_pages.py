@@ -49,6 +49,21 @@ class PublisherTests(unittest.TestCase):
                                       'a' * 40, 'https://owner.github.io/site/')
         return output, manifest
 
+    def test_base_url_configuration_matches_preview_manifest(self):
+        self.assertEqual(pages.site_base_url(self.root, 'owner/site'), 'https://owner.github.io/site/')
+        self.assertEqual(pages.site_base_url(self.root, 'owner/owner.github.io'), 'https://owner.github.io/')
+        (self.root / 'docs/CNAME').write_text('pages.example.test')
+        base = pages.site_base_url(self.root, 'owner/site')
+        self.assertEqual(base, 'https://pages.example.test/')
+        self.assertEqual(pages.site_base_url(self.root, 'owner/site', 'https://test.example/prefix'),
+                         'https://test.example/prefix/')
+        with patch.object(pages, 'git', return_value=''):
+            result = pages.assemble(self.root, self.root / 'custom-site', [pull(1)], 'owner/site',
+                lambda sha: archive({'artifacts/task/public/index.html': HTML}), 'a' * 40, base)
+        self.assertEqual(result['previews'][0]['url'], 'https://pages.example.test/previews/pr-1/task/')
+        with self.assertRaises(ValueError):
+            pages.site_base_url(self.root, 'owner/site', 'https://user:password@example.test/')
+
     def test_multiple_previews_leave_production_byte_identical(self):
         def load(sha):
             return archive({'artifacts/task/public/index.html': HTML,

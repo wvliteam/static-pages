@@ -13,8 +13,8 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-LOCAL_CHECK = ROOT / 'skills/static-page-builder/scripts/check_static_html.py'
-REMOTE_CHECK = ROOT / 'skills/static-page-publisher/scripts/verify_deployment.py'
+LOCAL_CHECK = ROOT / 'scripts/check_static_html.py'
+REMOTE_CHECK = ROOT / 'scripts/verify_deployment.py'
 HTML = b'<!doctype html><html><head><title>Example</title><meta name="viewport" content="width=device-width"></head><body><h1 id="main">Example</h1></body></html>'
 
 

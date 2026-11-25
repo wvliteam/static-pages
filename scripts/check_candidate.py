@@ -5,18 +5,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
-import sys
 import tarfile
 import tempfile
+from urllib.parse import urlsplit
 
-from build_pages import MAX_ARCHIVE, archive_files, preview_html
+from build_pages import MAX_ARCHIVE, archive_files, preview_html, site_base_url
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "skills/static-page-builder/scripts"))
-sys.path.insert(0, str(ROOT / "skills/static-page-publisher/scripts"))
 from check_static_html import HtmlChecker
 from verify_deployment import relative_path
 
@@ -87,6 +85,11 @@ def checked_path(path: str) -> None:
     relative_path(path)
 
 
+def base_path() -> str:
+    return urlsplit(site_base_url(Path.cwd(), os.environ.get('GITHUB_REPOSITORY', 'local/static-pages'),
+                                 os.environ.get('STATIC_PAGES_BASE_URL'))).path
+
+
 def check_html(root: Path, names: list[str], base: str, issues: list[str], label: str) -> None:
     checker = HtmlChecker(root, base)
     for name in names:
@@ -111,7 +114,7 @@ def check_production(candidate: str, result: dict) -> None:
         raise ValueError("docs must match the tested merge checkout with no untracked files")
     names = [name.removeprefix("docs/") for name in files if name.lower().endswith(".html")]
     result["production_pages"] = names
-    check_html(Path("docs"), names, "/static-pages/", result["issues"], "docs/")
+    check_html(Path("docs"), names, base_path(), result["issues"], "docs/")
 
 
 def check_previews(head: str, number: int, result: dict) -> None:
@@ -156,7 +159,7 @@ def check_previews(head: str, number: int, result: dict) -> None:
                     preview_html(files[name], number, task, head)
                 except ValueError as exc:
                     issues.append(f"{label}{name}: {exc}")
-            base = f"/static-pages/previews/pr-{number}/{task}/"
+            base = base_path() + f"previews/pr-{number}/{task}/"
             check_html(root, names, base, issues, label)
 
 

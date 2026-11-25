@@ -19,23 +19,18 @@ mkdir -p artifacts/example-page/public scratch
 
 任务名须匹配 `[a-z0-9][a-z0-9-]{0,79}`，如 `daily-review`；分支名必须以 `preview/` 开头。分支名和任务名可以不同，网址中的任务名来自 `artifacts/<task>/public/`，建议保持一致。一个 PR 可含多个任务，但通常一项审阅任务使用一个 PR 更清楚。
 
-## 2. 分阶段创建或接收页面
+## 2. 接收静态产物
 
-1. 明确页面结论、读者、数据来源与日期，先完成内容结构。
-2. 在 `artifacts/example-page/public/` 制作布局，再补充图表、交互和移动端适配。
-3. 放入完整的 `index.html` 和必要资源。每个 HTML 使用 UTF-8，并包含 `html`、`head`、`body` 元素。
-4. 核对数据、引用、资源和操作状态，再提交供在线审阅。
+将已有的 index.html、HTML/CSS/JavaScript 和必要资源放入 artifacts/example-page/public/。页面创作、数据核验和交互设计由调用方完成；需要相关技能时使用 FlowKit 的 static-page-builder。
 
-可直接接收已有 HTML，无需为了发布重写。若使用框架，把构建结果复制到 `public/`；工作流不会替你执行 npm、Python 或其他 PR 构建代码。
+框架项目先在本地构建，再交付静态产物；本仓库不会运行 PR 构建代码。HTML 使用 UTF-8，包含 html、head、body、标题和移动视口。使用适合嵌套预览路径的相对资源链接。预览横幅由部署注入，源文件不手写 data-static-preview 标记。
 
-资源优先使用 `./assets/chart.js` 等相对路径。`/assets/chart.js` 会指向域名根目录，通常不适用于项目站点或嵌套预览。页面内资源尽量自包含；链接到正式首页时可明确使用站点完整 URL，避免预览路径与正式路径深度不同导致跳转错误。
-
-不要在源 HTML 手写预览横幅或 `data-static-preview` 标记，它们由部署注入。原始数据、截图、日志和本机工具放在忽略的 `scratch/` 或仓库外；该目录不是私密存储服务，不应被强制提交。
+原始数据、截图和日志放忽略的 scratch/ 或仓库外。public 只含将公开浏览的文件。
 
 ## 3. 本地检查
 
 ```bash
-python3 skills/static-page-builder/scripts/check_static_html.py \
+python3 scripts/check_static_html.py \
   --root artifacts/example-page/public \
   --output scratch/example-page-local.json
 ```
@@ -47,7 +42,7 @@ python3 skills/static-page-builder/scripts/check_static_html.py \
 交给发布器前确认文件仍与检查摘要一致：
 
 ```bash
-python3 skills/static-page-publisher/scripts/verify_artifact_manifest.py \
+python3 scripts/verify_artifact_manifest.py \
   --root artifacts/example-page/public \
   --manifest scratch/example-page-local.json
 ```
@@ -92,7 +87,7 @@ https://wvliteam.github.io/static-pages/previews/pr-<PR编号>/example-page/
 ```bash
 PREVIEW_PR=123
 PREVIEW_SHA=$(gh pr view "$PREVIEW_PR" --json headRefOid --jq .headRefOid)
-python3 skills/static-page-publisher/scripts/verify_deployment.py \
+python3 scripts/verify_deployment.py \
   --base-url https://wvliteam.github.io/static-pages/ \
   --preview-pr "$PREVIEW_PR" --preview-sha "$PREVIEW_SHA" \
   --task example-page --output scratch/example-page-preview.json
@@ -116,7 +111,7 @@ git mv artifacts/example-page/public docs/pages/example-page
 迁移后、提交前将正式目标目录与用户确认的预览 head 比较：
 
 ```bash
-python3 skills/static-page-publisher/scripts/compare_promotion.py \
+python3 scripts/compare_promotion.py \
   --repo-root . --preview-sha "$APPROVED_PREVIEW_SHA" \
   --task example-page --manifest scratch/example-page-local.json \
   --target-root docs/pages/example-page \
@@ -136,7 +131,7 @@ python3 skills/static-page-publisher/scripts/compare_promotion.py \
 更新 `docs/index.html` 的链接和页面数量（如有），并更新 README 的已发布页面列表。在任务的全部 `artifacts/` 文件清理完成前不要合并；main 禁止存在任何跟踪的草稿文件。无文件的本地空目录不会进入 Git。
 
 ```bash
-python3 skills/static-page-builder/scripts/check_static_html.py \
+python3 scripts/check_static_html.py \
   --root docs --page . --page pages/example-page/ --base-path /static-pages/ \
   --require-homepage-link --output scratch/example-page-formal-local.json
 git ls-files artifacts
@@ -167,7 +162,7 @@ gh pr merge "$PREVIEW_PR" --merge --delete-branch
 git switch main
 git pull --ff-only origin main
 MAIN_SHA=$(git rev-parse HEAD)
-python3 skills/static-page-publisher/scripts/verify_deployment.py \
+python3 scripts/verify_deployment.py \
   --base-url https://wvliteam.github.io/static-pages/ \
   --main-sha "$MAIN_SHA" --page . --page pages/example-page/ \
   --local-root docs --output scratch/example-page-formal.json
@@ -178,7 +173,7 @@ python3 skills/static-page-publisher/scripts/verify_deployment.py \
 需要完整核对正式站点全部文件时，使用 `--all-production` 替代 `--page`；该模式按 manifest 清单检查 HTML 与所有正式资源。每个文件记录自己的下载、哈希、MIME 与本地比较错误，单个文件失败不会隐藏其他文件结果；整体结果仍为失败。单页轻量模式保持不变。
 
 ```bash
-python3 skills/static-page-publisher/scripts/verify_deployment.py \
+python3 scripts/verify_deployment.py \
   --base-url https://wvliteam.github.io/static-pages/ \
   --main-sha "$MAIN_SHA" --all-production --local-root docs \
   --output scratch/example-page-formal-all.json
@@ -192,28 +187,29 @@ python3 skills/static-page-publisher/scripts/verify_deployment.py \
 
 撤回正式页面时，通过新的提交删除对应 `docs/` 页面并更新导航和 README；撤销错误修改时可对相关提交做有针对性的 revert。不要改写共享 main 历史、重置其他页面，或直接修改 `gh-pages`。部署后再次核对版本和页面可达性。
 
-## 7. Skill 的安装与维护
+## 7. 校验工具与技能边界
 
-两份技能源码位于 [创建器](skills/static-page-builder/SKILL.md) 和 [发布器](skills/static-page-publisher/SKILL.md)。可在 Codex 中请求：
+页面创建和发布的 Agent 技能在 [FlowKit](https://github.com/wvliteam/flowkit) 维护，安装源改为 wvliteam/flowkit 的 skills/static-page-builder 和 skills/static-page-publisher。本仓库部署不需要技能安装，也不需要相邻 FlowKit 检出。
 
-```text
-使用 skill-installer，从 wvliteam/static-pages 安装
-skills/static-page-builder 和 skills/static-page-publisher。
-```
+scripts 中 check_static_html.py、verify_artifact_manifest.py、compare_promotion.py 和 verify_deployment.py 是固定校验快照。flowkit-checks.json 记录各文件来源路径、SHA-256 和由完整来源清单计算的内容版本。维护时先在 FlowKit 修改并测试，再从 FlowKit 根目录显式运行：
 
-也可按本机 skill 管理方式将对应目录安装到 `$CODEX_HOME/skills/`；未自定义时通常为 `~/.codex/skills/`。保留完整目录结构，包括 `SKILL.md`、`agents/`、`references/` 和 `scripts/`。更新前检查已安装副本是否有本机修改，避免直接覆盖。
+~~~bash
+python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --check
+python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --write
+python3 scripts/sync_static_pages_checks.py --repo-dir /path/to/static-pages --check
+~~~
 
-| 任务 | 使用技能 |
-| --- | --- |
-| 在本地生成 HTML，不上传 | `static-page-builder` |
-| 把已有 HTML 发成在线预览 | `static-page-publisher` |
-| 创建页面并审阅后上线 | 两者组合，先由发布器确定分支和输出位置 |
+--write 只更新这四个文件及清单，执行前先检查目标文件的本机改动。两仓库分别审阅、提交；CI 只验证本地快照，不在部署时下载最新技能。历史设计与规范中的旧路径作为历史记录保留。
 
-仓库源码是版本依据，修改 skill 后按需同步已安装副本。不要把 GitHub 账号、本机绝对路径等站点配置写死进通用 skill；仓库约定由本项目文档提供。新装技能不能替代仓库端 Pages 工作流配置。
+### 已授权金融自动报告
+
+普通页面仍遵循预览确认流程。FlowKit financial-flash-pipeline 在既有持续授权范围内，可通过 report-publisher 直接提交 docs/reports/portfolio-flash/<日期>/<观测时间>/index.html 和首页索引。自动报告逐条登记首页，不要求每轮更新 README。扩大内容范围、其他页面或缺少持续授权时回到默认预览流程；分支保护仍须遵守。
+
+自动发布也使用本仓库 Pages 工作流。FlowKit 先核对本次 main push 对应的成功运行，再核对 deployment.json 的 main_sha 和线上/本地文件字节，之后才通知。仅 Git push 成功不代表部署成功。站点地址优先显式配置，其次 docs/CNAME，最后 GitHub origin 项目地址；调用方应传入实际基地址。
 
 ## 8. 维护工作流与测试
 
-发布脚本和技能检查器的测试命令：
+发布脚本和校验工具的测试命令：
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -278,7 +274,7 @@ python3 -m unittest discover -s tests -v
 4. 确认构建 job 可写生成的 gh-pages 分支、读取同仓库 PR，部署 job 可写 Pages 并申请 OIDC token。组织策略或分支保护可能需要维护者调整。
 5. 更新 README、导航和仓库约定中的站点地址，再运行一次工作流并校验正式首页。
 
-当前脚本按 `https://<owner>.github.io/<repo>/` 推导站点基地址，main、docs、artifacts 等约定也直接体现在代码中；自定义域名、用户根站点或其他目录方案需要先调整代码和测试。提交 workflow 的账号若被提示缺少 workflow 授权，应补足相应权限；勿通过打印 token 或更换未经授权的身份绕过。
+站点组合器从 STATIC_PAGES_BASE_URL、docs/CNAME 或仓库名推导基地址；调用方的验收基地址须与其一致。main、docs、artifacts 等目录约定仍由代码固定。提交 workflow 的账号若被提示缺少 workflow 授权，应补足相应权限；勿通过打印 token 或更换未经授权的身份绕过。
 
 ### 构建限制与信任范围
 

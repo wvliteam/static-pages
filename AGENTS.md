@@ -10,10 +10,9 @@
 
 ## 技能与交接
 
-- `skills/static-page-builder/` 负责内容、图表、交互、数据核对和本地页面检查；可接受任意输出目录，不要求 GitHub。
-- `skills/static-page-publisher/` 负责分支、PR、线上预览、确认和正式发布；可直接接收已有页面，不强制重做。
-- 端到端任务先由发布器确定分支和输出目录，再由创建器制作并检查，最后交给发布器部署。交接提供产物路径、入口、必要资源、数据日期和检查结果。
-- 技能源文件在仓库版本管理；只有修改 skill 时才按需同步已安装副本，并先保护本机改动。不要在通用 skill 中固定本机路径或账号。
+- 本仓库仅维护静态托管、PR 预览、正式部署及必要校验。页面创建与发布 skill 在 wvliteam/flowkit 维护；交接接收入口、必要资源、数据日期、检查记录与 bundle_sha256。
+- 无需安装 skill 即可使用 scripts 的本地检查、摘要核对、迁移比较和线上验收工具。共享脚本是带哈希清单的固定快照；维护方法见 CONTRIBUTING.md，不在部署时拉取 FlowKit 最新代码。
+- .agents/skills/openspec-* 是本仓库基础设施开发工具，保留使用。不要把业务 skill 或原始分析资料放进 docs。
 
 ## 页面与目录边界
 
@@ -31,6 +30,11 @@
 - 确认后在 PR 分支把干净源文件移到正式 docs 目录，清理全部跟踪的 artifacts，更新 `docs/index.html` 的链接与数量（如有）及 README 正式列表，检查 diff 后再合并。
 - 迁移使 PR 无有效 artifacts 时，下次部署便可能移除预览；保留迁移前的确认 SHA，另记录最终 main SHA。main 严禁跟踪 artifacts 文件。
 
+## 已授权自动报告
+
+- 普通页面遵循上述预览确认。FlowKit financial-flash-pipeline 的既有持续发布授权仅允许自动更新 docs/reports/portfolio-flash/<日期>/<观测时间>/ 及对应首页索引；无需逐轮预览或登记 README，但仍遵守仓库保护和校验规则。
+- 其他页面、扩大范围或没有持续授权时采用默认预览流程。只有本次部署运行成功，main SHA 与线上文件校验通过后，才发送报告已上线通知。
+
 ## 发布基础设施
 
 - `.github/workflows/pages.yml` 在可信 main 上测试、组合站点、写 gh-pages，并在同一次 workflow 调用官方 Pages 上传和部署 Action；部署串行执行。
@@ -41,7 +45,7 @@
 
 ## 验证与交付
 
-- 页面改动运行创建器的 `check_static_html.py`，并按条件检查布局、键盘和交互；脚本不运行 JavaScript，不代替视觉审阅。没有本机浏览器时可提供 Pages 在线预览，勿声称完成了未执行的检查。
+- 页面改动运行 `scripts/check_static_html.py`，并按条件检查布局、键盘和交互；脚本不运行 JavaScript，不代替视觉审阅。没有本机浏览器时可提供 Pages 在线预览，勿声称完成了未执行的检查。
 - 工作流、发布脚本或检查器改动运行相关测试：`python3 -m unittest discover -s tests -v`。仅文档改动检查链接、命令与 `git diff --check`；不为低影响文档改动增加测试代码。
-- 部署后使用发布器的 `verify_deployment.py`，核对 manifest 的 main/PR head SHA 及实际文件哈希。正式文件可与本地 docs 比较；预览文件按 manifest 的注入后哈希核对。
+- 部署后使用 `scripts/verify_deployment.py`，核对 manifest 的 main/PR head SHA 及实际文件哈希。正式文件可与本地 docs 比较；预览文件按 manifest 的注入后哈希核对。
 - 只有本次运行成功且版本、内容核对通过，才称已部署；HTTP 200、gh-pages 更新或旧运行成功均不足以证明当前上线。输出检查记录放 scratch，交付说明包含 URL、版本及仍未完成的验收项。

@@ -9,7 +9,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECKER = ROOT / "skills/static-page-builder/scripts/check_static_html.py"
+CHECKER = ROOT / "scripts/check_static_html.py"
 HTML = (
     '<!doctype html><html><head><title>Example</title>'
     '<meta name="viewport" content="width=device-width"></head><body></body></html>'

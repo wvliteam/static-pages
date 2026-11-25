@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "source_repository": "wvliteam/flowkit",
+  "version": "8f24c2f2040f46d08f2d03b042e93e8b980944bb7f39c6f5a0310b577bf1a41b",
+  "files": {
+    "check_static_html.py": {
+      "source": "skills/static-page-builder/scripts/check_static_html.py",
+      "sha256": "23fbd6d346d92bc38cf410849c12ed316ae82e511cede15ed5a0719d7c876079"
+    },
+    "compare_promotion.py": {
+      "source": "skills/static-page-publisher/scripts/compare_promotion.py",
+      "sha256": "07233570fed824f2e946d6dbb0fc50aedfdbb59aa2021d82f3304497a7cce488"
+    },
+    "verify_artifact_manifest.py": {
+      "source": "skills/static-page-publisher/scripts/verify_artifact_manifest.py",
+      "sha256": "65f2c4559787817ea4a8c5666f2b2070139b01699a9c388a7d8f73776f0bb56d"
+    },
+    "verify_deployment.py": {
+      "source": "skills/static-page-publisher/scripts/verify_deployment.py",
+      "sha256": "64efed3916578c935ed01aaf0a949a25dae52190a161960d3f62422f9612def6"
+    }
+  }
+}

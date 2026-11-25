@@ -1,4 +1,0 @@
-interface:
-  display_name: "静态页面预览与发布"
-  short_description: "接收已有HTML，通过PR提供Pages预览，确认后正式收录并核对版本与部署"
-  default_prompt: "使用 $static-page-publisher 将这份已有静态网页部署到统一仓库的PR预览，核对源提交与线上内容，确认本次版本后再正式收录。"

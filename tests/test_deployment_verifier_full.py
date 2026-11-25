@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / 'skills/static-page-publisher/scripts/verify_deployment.py'
+SCRIPT = ROOT / 'scripts/verify_deployment.py'
 SPEC = importlib.util.spec_from_file_location('verify_deployment_full', SCRIPT)
 verifier = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(verifier)

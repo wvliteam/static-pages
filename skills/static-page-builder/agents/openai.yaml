@@ -1,4 +1,0 @@
-interface:
-  display_name: "静态页面创建"
-  short_description: "分阶段制作HTML、图表与交互，核对数据和布局，并交付独立静态页面产物"
-  default_prompt: "使用 $static-page-builder 将上述内容分阶段制作成静态页面，完成图表、交互和本地检查，将入口HTML与必要资源写入指定目录。"

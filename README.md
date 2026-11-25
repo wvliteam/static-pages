@@ -1,29 +1,45 @@
-# Static Pages · 统一静态页面仓库
+# Static Pages · 静态发布与预览
 
-在一个仓库中制作、审阅和发布分析报告、独立网页与静态小工具。页面先通过 PR 获得在线预览，确认当前版本后再加入正式目录；预览和正式页面都可直接在浏览器中访问。
+本仓库托管已生成的静态网页，提供 PR 在线预览、正式部署和版本验收。页面制作与 Agent 技能由 [FlowKit](https://github.com/wvliteam/flowkit) 维护；本仓库不再分发业务 skill。
 
 - [正式页面目录](https://wvliteam.github.io/static-pages/)
-- [使用指南：创建、预览、发布、维护](CONTRIBUTING.md)
+- [发布与维护指南](CONTRIBUTING.md)
 - [Agent 工作约定](AGENTS.md)
-- [已采纳方案：直接静态门户设计与实施计划](design/static-portal/README.md)
-- [部署工作流与运行记录](https://github.com/wvliteam/static-pages/actions/workflows/pages.yml)
-- [当前部署版本记录](https://wvliteam.github.io/static-pages/deployment.json)
+- [部署工作流](https://github.com/wvliteam/static-pages/actions/workflows/pages.yml)
+- [线上版本记录](https://wvliteam.github.io/static-pages/deployment.json)
 
-## 项目功能
+## 发布已有页面
 
-| 功能 | 使用方式 |
+需要 Git、Python 3.10+、已认证的 GitHub CLI，以及目标仓库的相应权限。脚本仅使用 Python 标准库。
+
+在干净检出中从最新 main 创建 preview/<task> 分支，将入口 index.html 和必要资源放到 artifacts/<task>/public/。完整分支、PR 与发布命令见 [使用指南](CONTRIBUTING.md)。核心检查入口为：
+
+~~~bash
+python3 scripts/check_static_html.py --root artifacts/example-page/public --output scratch/example-page.json
+python3 scripts/verify_artifact_manifest.py --root artifacts/example-page/public --manifest scratch/example-page.json
+~~~
+
+同仓库、base=main、分支为 preview/<task> 的 PR 会被组合进站点。预览 URL、head SHA 和文件哈希以成功部署的摘要及 deployment.json 为准。确认具体版本后，将干净产物迁到 docs，移除 tracked artifacts，检查并合并。
+
+普通页面默认先预览后正式收录。已有持续授权的金融自动报告可由 FlowKit 的 report-publisher 直接更新其归档和首页索引；这不构成其他页面绕过预览的授权。
+
+## 保留的发布设施
+
+| 位置 | 职责 |
 | --- | --- |
-| 统一托管 | 报告放 `reports/`，普通页面放 `pages/`，工具放 `tools/`，各有独立网址 |
-| 分阶段制作 | 先确认内容结构，再补充布局、图表、交互和检查；支持单文件 HTML 或 HTML 加本地资源 |
-| 在线审阅 | 在 `preview/<task>` 分支提交静态产物并创建 PR，Actions 自动部署临时预览 |
-| 正式收录 | 确认具体预览版本后，迁移到 `main/docs/` 并更新导航 |
-| 多任务并存 | 每次组合正式页面和全部符合条件的活动 PR 预览；关闭 PR 后下次成功部署清理其预览 |
-| 版本验收 | 用 `deployment.json` 中的提交 SHA 与文件 SHA-256 核对线上内容 |
-| 可复用技能 | 页面创建和发布流程拆成两个独立 skill，可分别使用或组合 |
+| docs/ | 正式静态内容、导航与历史快照 |
+| artifacts/<task>/public/ | 仅 PR 分支跟踪的待审阅静态产物 |
+| .github/workflows/ | 候选校验、站点组合与官方 Pages 部署 |
+| scripts/build_pages.py、stage_pages.py | 组合正式源与活动预览，保存生成站点 |
+| scripts/check_candidate.py | 固定 Git 版本的候选与合并就绪检查 |
+| scripts/ 内的四个校验工具 | 本地检查、摘要核对、批准版本迁移与线上验收 |
+| scripts/flowkit-checks.json | 校验工具来源、固定内容版本与哈希 |
+| tests/ | 独立的发布设施回归测试 |
+| scratch/ | 忽略的本地日志、数据和截图 |
 
-发布的是静态 HTML、CSS、JavaScript 和资源文件，不提供服务器端程序或数据库。页面可以在浏览器执行交互逻辑；发布流程不会运行预览分支的构建脚本或安装其依赖。使用前端框架时，应先在本地生成静态产物。
+CI 只运行可信 main 的部署代码，按精确 PR head SHA 读取静态文件；不会执行 PR 构建脚本。main/docs 不得包含 previews、artifacts 或 deployment.json 保留路径。gh-pages 是生成快照，不能手动编辑或合入 main。
 
-预览链接可公开访问，部署注入的 `noindex` 仅提示搜索引擎，不提供访问控制。本仓库也公开可读，未正式收录不等于私密。
+预览链接公开可达，noindex 不提供访问控制。只有当前部署运行成功且版本和文件核对通过，才算上线。
 
 ## 已发布页面
 
@@ -31,100 +47,8 @@
 | --- | --- |
 | [513310 · 2026年11月20日收盘复盘](https://wvliteam.github.io/static-pages/reports/513310/2026-11-20/) | 分时与日 K、量能、溢价、关键价位和情景计算器 |
 
-## 从哪里开始
+## 技能与开发资料
 
-仅阅读报告，打开上面的正式页面链接即可。
+页面创建和发布技能的唯一维护位置是 FlowKit 的 skills/static-page-builder 与 skills/static-page-publisher；安装与使用见 [FlowKit](https://github.com/wvliteam/flowkit)。本仓库不需要安装它们即可检查和部署。
 
-让 agent 创建并预览页面，可使用以下请求；已有 HTML 时直接使用发布器。
-
-```text
-使用 $static-page-builder 和 $static-page-publisher，
-在 wvliteam/static-pages 为本次分析分阶段制作静态网页。
-先提供在线预览供我检查，正式收录前等待我确认具体版本。
-```
-
-手动操作需要 Git、Python 3.10+、GitHub CLI，以及该仓库的推送和 PR 权限。Python 脚本仅使用标准库，无需安装 Python 依赖；浏览器用于查看效果，不是运行静态检查或发布脚本的前置条件。
-
-```bash
-git clone https://github.com/wvliteam/static-pages.git
-cd static-pages
-gh auth status
-git switch -c preview/example-page
-mkdir -p artifacts/example-page/public
-```
-
-在该目录创建完整的 `index.html`，将必要资源一并放入其中；已有页面也可以复制过来。然后进行本地检查、提交和创建 PR：
-
-```bash
-python3 skills/static-page-builder/scripts/check_static_html.py \
-  --root artifacts/example-page/public
-git add artifacts/example-page/public
-git commit -m "Add example page preview"
-git push -u origin preview/example-page
-gh pr create --base main --head preview/example-page \
-  --title "Preview: example page" --body "提供 example-page 在线预览，待审阅后正式收录。"
-```
-
-等待 [Pages 工作流](https://github.com/wvliteam/static-pages/actions/workflows/pages.yml) 成功，从运行摘要或 `deployment.json` 获取本次预览链接。地址形如 `https://wvliteam.github.io/static-pages/previews/pr-<编号>/example-page/`，实际是否上线以版本和文件校验为准。
-
-继续修改、线上校验、正式发布和关闭预览的命令见 [使用指南](CONTRIBUTING.md)。
-
-## 分支和文件位置
-
-| 位置 | 内容 | 是否作为网页部署 |
-| --- | --- | --- |
-| `main` 的 `docs/` | 已确认的正式页面和导航 | 是 |
-| 活动 PR 的 `artifacts/<task>/public/` | 可审阅的 HTML 和必要资源 | 是，部署到对应预览路径 |
-| `gh-pages` 分支 | 工作流生成的完整站点快照 | 作为部署产物保存，勿手动编辑或合入 main |
-| 根目录文档、`scripts/`、`tests/`、`skills/` | 使用说明、发布代码、测试、技能源文件 | 否，但 GitHub 仓库可读 |
-| 本地 `scratch/` | 原始数据、检查记录、截图和临时文件 | 否，已被 Git 忽略 |
-
-```text
-README.md                         # 项目概览
-CONTRIBUTING.md                   # 完整操作与维护指南
-AGENTS.md                         # agent 执行约定
-.github/workflows/pages.yml       # 测试、组合、保存快照和部署
-scripts/build_pages.py            # 读取正式页面和活动 PR 的静态文件
-scripts/stage_pages.py            # 更新生成的 gh-pages 分支
-tests/                            # 发布流程和 skill 检查器的测试
-skills/static-page-builder/       # 页面内容、图表、交互、本地检查
-skills/static-page-publisher/     # 分支预览、确认、正式发布、线上校验
-docs/
-  index.html                      # 正式导航首页
-  .nojekyll
-  reports/<代码>/<YYYY-MM-DD>/index.html
-  pages/<名称>/index.html
-  tools/<名称>/index.html
-artifacts/<task>/public/index.html # 只在预览分支跟踪，正式合并前移除
-scratch/                          # 本地临时目录，按需创建
-```
-
-`docs/` 是网站源码目录，维护说明应写在根目录等站点源码之外。`docs/previews/`、`docs/artifacts/`、`docs/deployment.json` 为保留路径，不得创建；`main` 不得跟踪 `artifacts/` 中的文件。
-
-## 两个 skill 如何配合
-
-| Skill | 职责 | 可以独立完成 |
-| --- | --- | --- |
-| [static-page-builder](skills/static-page-builder/SKILL.md) | 分阶段组织内容、制作图表与交互、检查数据和本地页面 | 在任意指定目录制作静态产物，无需 GitHub 登录 |
-| [static-page-publisher](skills/static-page-publisher/SKILL.md) | 准备预览分支与 PR、核对部署、按确认版本正式收录 | 接收已有 HTML，不要求重新制作 |
-
-完整任务按“发布器准备分支与输出目录 → 创建器制作并检查 → 发布器提供在线预览 → 用户确认该版本 → 正式收录”进行。交接时提供产物目录、入口、必要资源、数据日期和检查结果。UI 设计可结合 `ui-ux-pro-max`；金融报告参考属于创建器的可选内容，普通页面无需加载。
-
-安装方式和两个检查脚本的示例见 [使用指南](CONTRIBUTING.md)。技能源码保存在仓库 `skills/` 下，安装到本机的副本需要单独同步。
-
-## 规范驱动开发
-
-门户能力、复杂工具和发布基础设施可以使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 跟踪提案、可验证场景和实施任务。规范与归档在 [openspec/](openspec/)，Codex 的项目技能在 `.agents/skills/`。安装、适用范围及首个候选检查示例见 [开发指南](CONTRIBUTING.md#使用-openspec)。常规内容更新继续使用现有页面流程。
-
-## 部署原理
-
-仓库的 Pages 发布来源为 **GitHub Actions**。推送 main、符合条件的 PR 事件或手动运行，会触发 [pages.yml](.github/workflows/pages.yml)：
-
-1. 检出可信的 main，执行测试。
-2. 复制 `main/docs/`，按各 PR 的精确 head SHA 读取静态预览文件。
-3. 为预览 HTML 注入状态横幅和 `noindex`，生成版本与文件哈希记录；正式页面字节保持不变。
-4. 将完整站点保存到生成的 `gh-pages` 分支，在同一次 workflow 上传产物并部署到 Pages。
-
-所有部署串行执行，每次重建完整站点。`gh-pages` 只是生成快照，不能仅靠向它推送来替代本工作流的部署步骤。工作流的上传产物保留 1 天；这不是预览网址的有效期。预览通常持续到 PR 关闭、合并或其有效产物被移除后的下一次成功部署。
-
-代码入口、环境配置、体积限制、验证方法和故障处理见 [使用指南](CONTRIBUTING.md)。
+维护校验工具时，先在 FlowKit 修改源码并测试，再显式同步固定快照；步骤见 [使用指南](CONTRIBUTING.md#7-校验工具与技能边界)。现有 .agents/skills/openspec-* 仅服务本仓库基础设施开发，继续保留。历史方案与规范位于 design/ 和 openspec/，不作为网页部署。
