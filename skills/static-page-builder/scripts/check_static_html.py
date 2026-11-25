@@ -9,8 +9,78 @@ from html.parser import HTMLParser
 import json
 from pathlib import Path
 import re
+import stat
 import sys
 from urllib.parse import unquote, urlsplit
+
+MAX_CSS_IMPORT_DEPTH = 32
+CSS_URL = re.compile(r"""url\(\s*(?:(['\"])(.*?)\1|([^)]*?))\s*\)""", re.I | re.S)
+CSS_IMPORT = re.compile(
+    r"""@import\s+(?:(['\"])(.*?)\1|url\(\s*(?:(['\"])(.*?)\3|([^)]*?))\s*\))""",
+    re.I | re.S,
+)
+CSS_COMMENTS = re.compile(r"/\*.*?\*/", re.S)
+
+
+def css_references(text: str) -> list[tuple[str, bool]]:
+    """Return local-looking CSS references and whether each is an @import."""
+    text = CSS_COMMENTS.sub("", text)
+    references: dict[str, bool] = {}
+    for match in CSS_IMPORT.finditer(text):
+        value = match.group(2) or match.group(4) or match.group(5) or ""
+        value = value.strip().strip("'\"")
+        if value:
+            references[value] = True
+    for match in CSS_URL.finditer(text):
+        value = (match.group(2) or match.group(3) or "").strip().strip("'\"")
+        if value:
+            references.setdefault(value, False)
+    return list(references.items())
+
+
+def artifact_manifest(root: Path) -> tuple[dict, list[str]]:
+    """Hash every regular file under root without following symlinks."""
+    files = []
+    issues = []
+
+    def visit(directory: Path) -> None:
+        try:
+            children = sorted(directory.iterdir(), key=lambda path: path.name)
+        except OSError as exc:
+            relative = directory.relative_to(root).as_posix() or "."
+            issues.append(f"无法读取产物目录 {relative}: {exc}")
+            return
+        for path in children:
+            relative = path.relative_to(root).as_posix()
+            try:
+                mode = path.lstat().st_mode
+            except OSError as exc:
+                issues.append(f"无法检查产物文件 {relative}: {exc}")
+                continue
+            if stat.S_ISLNK(mode):
+                issues.append(f"产物中不允许符号链接：{relative}")
+            elif stat.S_ISDIR(mode):
+                visit(path)
+            elif stat.S_ISREG(mode):
+                try:
+                    content = path.read_bytes()
+                except OSError as exc:
+                    issues.append(f"无法读取产物文件 {relative}: {exc}")
+                    continue
+                files.append({
+                    "path": relative,
+                    "bytes": len(content),
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                })
+            else:
+                issues.append(f"产物中不允许特殊文件：{relative}")
+
+    visit(root)
+    files.sort(key=lambda record: record["path"])
+    canonical = json.dumps(
+        files, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return {"files": files, "bundle_sha256": hashlib.sha256(canonical).hexdigest()}, issues
 
 
 class Document(HTMLParser):
@@ -18,7 +88,7 @@ class Document(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.ids: set[str] = set()
         self.duplicate_ids: set[str] = set()
-        self.references: list[tuple[str, bool]] = []
+        self.references: list[tuple[str, bool, bool]] = []
         self.anchors: list[str] = []
         self.title_parts: list[str] = []
         self.viewport = False
@@ -50,10 +120,10 @@ class Document(HTMLParser):
             if tag == 'link':
                 resource = bool(set(values.get('rel', '').lower().split()) & {'stylesheet', 'icon', 'preload', 'modulepreload'})
             if tag in {'a', 'link', 'use', 'image'} or resource:
-                self.references.append((value, resource or tag == 'image'))
+                self.references.append((value, resource or tag == 'image', False))
         # A self-contained page cannot rely on srcset. Do not guess its full grammar.
         if values.get('srcset'):
-            self.references.append(('srcset:' + values['srcset'], True))
+            self.references.append(('srcset:' + values['srcset'], True, False))
 
     def handle_endtag(self, tag):
         if tag == 'title':
@@ -65,10 +135,8 @@ class Document(HTMLParser):
         if self._title:
             self.title_parts.append(data)
         if self._style:
-            for match in re.finditer(r'url\(\s*[\'"]?([^\'"\s)]+)', data, re.I):
-                self.references.append((match.group(1), True))
-            for match in re.finditer(r'@import\s+[\'"]([^\'"]+)', data, re.I):
-                self.references.append((match.group(1), True))
+            self.references.extend((reference, True, imported)
+                                   for reference, imported in css_references(data))
 
 
 class HtmlChecker:
@@ -135,30 +203,69 @@ class HtmlChecker:
         if re.search(r'__(?:MARKET_DATA|PAGE_STYLES|PAGE_SCRIPT)__', text):
             issues.append('存在尚未替换的构建占位符')
         seen = set()
-        for ref, resource in doc.references:
-            if (ref, resource) in seen:
-                continue
-            seen.add((ref, resource))
+        css_visited: set[Path] = set()
+        css_active: list[Path] = []
+
+        def check_reference(source: Path, ref: str, resource: bool) -> Path | None:
             if ref.startswith('srcset:'):
                 if self.single_file:
                     issues.append('单文件模式下请将 srcset 资源内嵌或移除该模式后人工核对')
-                continue
+                return None
             parsed = urlsplit(ref)
             if parsed.scheme.lower() == 'file':
                 issues.append('页面引用本机 file: 路径')
-                continue
+                return None
             if resource and self.single_file and parsed.scheme not in {'data', 'blob'} and not ref.startswith('#'):
                 issues.append('单文件模式仍引用运行资源：' + ref)
             try:
-                target, fragment = self.local_reference(page, ref)
+                target, fragment = self.local_reference(source, ref)
                 if target is None:
-                    continue
+                    return None
                 if not target.is_file():
                     issues.append('本地链接或资源不存在：' + ref)
-                elif fragment and target.suffix.lower() == '.html' and fragment not in self.document(target).ids:
+                    return None
+                if fragment and target.suffix.lower() == '.html' and fragment not in self.document(target).ids:
                     issues.append('HTML 锚点不存在：' + ref)
+                return target
             except (ValueError, UnicodeError, OSError) as exc:
                 issues.append(f'无法验证链接 {ref!r}：{exc}')
+                return None
+
+        def check_css(path: Path) -> None:
+            resolved = path.resolve()
+            if resolved in css_active:
+                cycle = css_active[css_active.index(resolved):] + [resolved]
+                labels = [item.relative_to(self.root).as_posix() for item in cycle]
+                issues.append('CSS @import 循环：' + ' -> '.join(labels))
+                return
+            if resolved in css_visited:
+                return
+            if len(css_active) >= MAX_CSS_IMPORT_DEPTH:
+                issues.append(f'CSS @import 深度超过 {MAX_CSS_IMPORT_DEPTH}：{resolved.relative_to(self.root).as_posix()}')
+                return
+            css_visited.add(resolved)
+            css_active.append(resolved)
+            try:
+                text = resolved.read_text(encoding='utf-8')
+            except (OSError, UnicodeError) as exc:
+                issues.append(f'无法读取 CSS {resolved.relative_to(self.root).as_posix()}: {exc}')
+                css_active.pop()
+                return
+            for ref, imported in css_references(text):
+                target = check_reference(resolved, ref, True)
+                if imported and target is not None and target.suffix.lower() == '.css':
+                    check_css(target)
+            css_active.pop()
+
+        for ref, resource, imported in doc.references:
+            if (ref, resource, imported) in seen:
+                continue
+            seen.add((ref, resource, imported))
+            target = check_reference(page, ref, resource)
+            if target is not None and resource and target.suffix.lower() == '.css':
+                check_css(target)
+            elif target is not None and imported and target.suffix.lower() == '.css':
+                check_css(target)
         return issues
 
     def homepage_has(self, page: Path) -> bool:
@@ -194,8 +301,11 @@ def main(argv=None) -> int:
     if args.output and args.output.resolve().is_relative_to(args.root.resolve()):
         parser.error('--output must be outside --root')
     checker = HtmlChecker(args.root, args.base_path, args.require_single_file)
+    manifest, manifest_issues = artifact_manifest(checker.root)
     result = {'checked_at': datetime.now(timezone.utc).isoformat(),
-              'root': str(checker.root), 'base_path': args.base_path, 'pages': [], 'ok': True}
+              'root': str(checker.root), 'base_path': args.base_path,
+              'artifact_manifest': manifest, 'issues': manifest_issues,
+              'pages': [], 'ok': not manifest_issues}
     for route in dict.fromkeys(args.page or ['.']):
         record = {'route': route, 'issues': []}
         try:

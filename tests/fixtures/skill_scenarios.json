@@ -1,0 +1,60 @@
+[
+  {
+    "id": "builder-local-only",
+    "skill": "static-page-builder",
+    "request": "Create a static page in the supplied output directory; do not publish it.",
+    "expected": [
+      "Write the entry page and required assets only inside the requested output directory.",
+      "Run the local checker and hand off the check JSON and bundle digest.",
+      "Do not create a branch, push, or deploy."
+    ]
+  },
+  {
+    "id": "combined-builder-publisher",
+    "skill": "static-page-builder + static-page-publisher",
+    "request": "Create and preview a page using the repository workflow.",
+    "expected": [
+      "Publisher prepares the task path before builder output.",
+      "Publisher verifies the builder manifest before staging.",
+      "Only the task's public files are staged."
+    ]
+  },
+  {
+    "id": "existing-html-without-check-record",
+    "skill": "static-page-publisher",
+    "request": "Preview this existing HTML and its assets without rewriting the analysis.",
+    "expected": [
+      "Preserve existing content.",
+      "Generate a fresh local check manifest if none was supplied.",
+      "Verify the deployed preview SHA and manifest file hashes."
+    ]
+  },
+  {
+    "id": "approved-version-promotion",
+    "skill": "static-page-publisher",
+    "request": "Promote the exact preview version I approved.",
+    "expected": [
+      "Use the recorded approved preview SHA as comparison source.",
+      "Compare the full file set and bytes against the formal target.",
+      "Wait for candidate and main-ready checks on the migration commit before merging."
+    ]
+  },
+  {
+    "id": "complete-production-resource-check",
+    "skill": "static-page-publisher",
+    "request": "Verify this exact main deployment, including every published asset.",
+    "expected": [
+      "Use --all-production with the expected main SHA and local docs root.",
+      "Report per-file errors and do not claim success if any file fails."
+    ]
+  },
+  {
+    "id": "css-transitive-dependency-failure",
+    "skill": "static-page-builder",
+    "request": "Check a page whose external stylesheet imports a missing local font.",
+    "expected": [
+      "Fail local checks and identify the missing nested CSS dependency.",
+      "Do not claim browser or JavaScript behavior was checked by the static checker."
+    ]
+  }
+]
