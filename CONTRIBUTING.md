@@ -42,6 +42,18 @@ python3 skills/static-page-builder/scripts/check_static_html.py \
 
 检查器默认检查根目录的 `index.html`，可重复使用 `--page` 指定其他 HTML。它检查标题、移动视口、重复 ID、已知占位符、HTML 引用的本地资源和锚点等；失败会返回非零退出码。完整选项可用 `--help` 查看。
 
+检查 JSON 的 `artifact_manifest` 列出整个根目录的普通文件相对路径、字节数与 SHA-256，并对排序后的清单生成 `bundle_sha256`。检查记录必须放在根目录外。检查器还会递归检查独立 CSS 的本地 `url()` 和 `@import` 资源；不执行 JavaScript 或验证外网运行资源。多页面目录需对每个 HTML 重复提供 `--page`。
+
+交给发布器前确认文件仍与检查摘要一致：
+
+```bash
+python3 skills/static-page-publisher/scripts/verify_artifact_manifest.py \
+  --root artifacts/example-page/public \
+  --manifest scratch/example-page-local.json
+```
+
+文件增删、改字节或路径变化都会返回非零，并列出对应状态。若接收的已有 HTML 没有检查记录，发布器先创建一份新记录再复核，不沿用过期摘要。
+
 | 选项 | 适用情况 |
 | --- | --- |
 | `--page detail.html` | 检查额外页面，可重复传入 |
@@ -101,6 +113,18 @@ mkdir -p docs/pages
 git mv artifacts/example-page/public docs/pages/example-page
 ```
 
+迁移后、提交前将正式目标目录与用户确认的预览 head 比较：
+
+```bash
+python3 skills/static-page-publisher/scripts/compare_promotion.py \
+  --repo-root . --preview-sha "$APPROVED_PREVIEW_SHA" \
+  --task example-page --manifest scratch/example-page-local.json \
+  --target-root docs/pages/example-page \
+  --output scratch/example-page-promotion.json
+```
+
+比较器从指定 SHA 的 Git archive 读取预览源，不使用当前工作树中可能已变化的草稿。目标需与批准产物拥有相同相对路径及字节；任何新增、缺失或修改都在合并前处理。
+
 | 页面类型 | 正式源路径 | 正式网址后缀 |
 | --- | --- | --- |
 | 日期报告 | `docs/reports/<代码>/<YYYY-MM-DD>/index.html` | `reports/<代码>/<YYYY-MM-DD>/` |
@@ -121,6 +145,13 @@ git add docs/index.html docs/pages/example-page README.md
 git diff --cached --stat
 git commit -m "Publish approved example page"
 git push
+```
+
+迁移提交改变了 PR head。推送后等待候选工作流对最新 head 与测试合并提交运行 `static-pages-candidate` 和 `static-pages-main-ready`；确认两者通过、摘要检查通过、`git ls-files artifacts` 无输出，并遵循当前分支保护规则后再合并：
+
+```bash
+git ls-files artifacts
+gh pr checks "$PREVIEW_PR"
 gh pr merge "$PREVIEW_PR" --merge --delete-branch
 ```
 
@@ -143,6 +174,15 @@ python3 skills/static-page-publisher/scripts/verify_deployment.py \
 ```
 
 `--main-sha` 必须是完整 40 位提交 SHA；`--page` 可重复，默认只核对首页。正式模式核对所选页面的线上哈希，可用 `--local-root docs` 额外比较本地字节；它不代替浏览器交互验收。若检查期间 main 又更新，应明确重新验收哪个提交，避免拿旧提交误判新部署。
+
+需要完整核对正式站点全部文件时，使用 `--all-production` 替代 `--page`；该模式按 manifest 清单检查 HTML 与所有正式资源。每个文件记录自己的下载、哈希、MIME 与本地比较错误，单个文件失败不会隐藏其他文件结果；整体结果仍为失败。单页轻量模式保持不变。
+
+```bash
+python3 skills/static-page-publisher/scripts/verify_deployment.py \
+  --base-url https://wvliteam.github.io/static-pages/ \
+  --main-sha "$MAIN_SHA" --all-production --local-root docs \
+  --output scratch/example-page-formal-all.json
+```
 
 正式 URL 为 `https://wvliteam.github.io/static-pages/pages/example-page/`。交付时记录 URL、main SHA、Actions 运行链接和校验结果。
 

@@ -28,19 +28,20 @@ description: "把分析、报告或小工具分阶段创建或修改为静态 HT
 
 ## 本地检查
 
-标准库脚本 `scripts/check_static_html.py` 只读取本地 HTML 与资源，不访问网络。它检查非空标题、viewport、重复 ID、锚点、相对链接、资源和已知构建占位符，可选单文件与首页收录检查。
+标准库脚本 `scripts/check_static_html.py` 只读取本地 HTML 与资源，不访问网络。它检查非空标题、viewport、重复 ID、锚点、相对链接、资源、独立 CSS 的本地 `url()`/`@import` 依赖和已知构建占位符，可选单文件与首页收录检查。JSON 结果包含 `artifact_manifest`：根目录下全部普通文件的排序相对路径、字节数、SHA-256 和 `bundle_sha256`；符号链接及特殊文件会使检查失败。
 
 ```bash
 python3 <skill-dir>/scripts/check_static_html.py \
-  --root <output-dir> --page . --require-single-file
+  --root <output-dir> --page . --require-single-file \
+  --output <check-record-outside-output-dir.json>
 ```
 
-集成到已有站点时把 `--root` 指向整个本地产物树，`--page` 选择页面相对路径，并传入真实 `--base-path`，例如 `/static-pages/`。需要验证首页收录时才加 `--require-homepage-link`。该脚本不执行 JavaScript，不验证外网链接，也不代替数据真实性、视觉或完整无障碍检查。
+集成到已有站点时把 `--root` 指向整个本地产物树，`--page` 选择页面相对路径；每个额外 HTML 页面重复传入 `--page`，并传入真实 `--base-path`，例如 `/static-pages/`。需要验证首页收录时才加 `--require-homepage-link`。检查记录必须放在产物根目录外，交给 publisher 前保存其完整 bundle 摘要。该脚本不执行 JavaScript，不验证外网链接，也不代替数据真实性、视觉或完整无障碍检查。
 
 图表切换、读数和计算器等有实际行为时做对应检查；复用可用浏览器工具。浏览器不可用时说明未完成的检查，不把 DOM 模拟说成真实浏览器或响应式验收。
 
 ## 交付与发布交接
 
-交付产物目录、入口 HTML、必要资源清单、相关数据日期、完成与未完成的检查；检查脚本输出源文件哈希，供版本交接。不强制新增元数据文件或构建工具。
+交付产物目录、入口 HTML、必要资源清单、相关数据日期、检查 JSON 路径、`bundle_sha256`、完成与未完成的检查。任何文件变化后重跑检查并更新摘要。不强制为简单页面新增单独元数据格式或构建工具。
 
 用户同时要求创建并发布时，组合 `static-page-publisher`：由发布器先准备其所需的分支与输出路径，本技能在该路径生成和检查，发布器再接收产物完成在线预览。只要求生成页面时到本地交付为止，不能将创建请求解释成上传许可。

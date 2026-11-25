@@ -99,11 +99,17 @@ def verify(args) -> dict:
         hashes = manifest.get('production_sha256')
         if not isinstance(hashes, dict):
             raise ValueError('Production hashes are missing from deployment record')
-        for route in dict.fromkeys(args.page or ['.']):
-            file = page_path(route)
-            if file not in hashes:
-                raise ValueError('Page is absent from production record: ' + file)
-            targets.append((file, digest(hashes[file])))
+        if args.all_production:
+            if 'index.html' not in hashes:
+                raise ValueError('Production hashes are missing the entry HTML')
+            for file, expected in sorted(hashes.items()):
+                targets.append((relative_path(file), digest(expected)))
+        else:
+            for route in dict.fromkeys(args.page or ['.']):
+                file = page_path(route)
+                if file not in hashes:
+                    raise ValueError('Page is absent from production record: ' + file)
+                targets.append((file, digest(hashes[file])))
     if len(targets) > MAX_FILES:
         raise ValueError('Too many files in selected deployment records')
 
@@ -113,19 +119,34 @@ def verify(args) -> dict:
     if args.preview_pr is not None:
         result.update(preview_pr=args.preview_pr, preview_sha=args.preview_sha)
     for file, expected in targets:
-        body, record = fetch(public_url(args.base_url, file), args.timeout)
-        actual = hashlib.sha256(body).hexdigest()
-        record.update(file=file, sha256=actual, expected_sha256=expected,
-                      content_matches_manifest=actual == expected)
-        if file.endswith('.html') and record['content_type'] != 'text/html':
-            raise ValueError('Expected HTML content type: ' + file)
-        record['ok'] = actual == expected
-        if args.local_root:
-            target = (args.local_root / file).resolve()
-            if not target.is_relative_to(args.local_root.resolve()):
-                raise ValueError('Local target escapes --local-root')
-            record['content_matches_local'] = target.read_bytes() == body
-            record['ok'] = record['ok'] and record['content_matches_local']
+        url = public_url(args.base_url, file)
+        record = {'url': url, 'file': file, 'expected_sha256': expected, 'errors': [], 'ok': False}
+        body = None
+        try:
+            body, metadata = fetch(url, args.timeout)
+            record.update(metadata)
+            actual = hashlib.sha256(body).hexdigest()
+            record.update(sha256=actual, content_matches_manifest=actual == expected)
+            if actual != expected:
+                record['errors'].append('Deployed content does not match the deployment manifest')
+            if file.endswith('.html') and record['content_type'] != 'text/html':
+                record['errors'].append('Expected HTML content type: ' + file)
+        except (ValueError, OSError, HTTPError, URLError) as exc:
+            record['errors'].append(str(exc))
+
+        if args.local_root and body is not None:
+            try:
+                target = (args.local_root / file).resolve()
+                if not target.is_relative_to(args.local_root.resolve()):
+                    raise ValueError('Local target escapes --local-root')
+                record['content_matches_local'] = target.read_bytes() == body
+                if not record['content_matches_local']:
+                    record['errors'].append('Deployed content differs from the local file')
+            except (ValueError, OSError) as exc:
+                record['content_matches_local'] = False
+                record['errors'].append(str(exc))
+
+        record['ok'] = not record['errors']
         result['files'].append(record)
         result['ok'] = result['ok'] and record['ok']
     return result
@@ -135,7 +156,11 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', required=True, help='HTTP(S) site URL ending in /')
     parser.add_argument('--main-sha', help='Expected production source SHA, required for formal checks')
-    parser.add_argument('--page', action='append', help='Formal HTML file or directory; repeatable')
+    production_scope = parser.add_mutually_exclusive_group()
+    production_scope.add_argument('--page', action='append',
+                                  help='Formal HTML file or directory; repeatable')
+    production_scope.add_argument('--all-production', action='store_true',
+                                  help='Verify every production file listed in deployment.json')
     parser.add_argument('--local-root', type=Path, help='Optional formal output directory for byte comparison')
     parser.add_argument('--preview-pr', type=int)
     parser.add_argument('--preview-sha', help='Expected PR head SHA')
@@ -156,8 +181,8 @@ def main(argv=None) -> int:
     if args.preview_pr is not None:
         if args.preview_pr <= 0 or not args.preview_sha:
             parser.error('Preview mode requires positive --preview-pr and --preview-sha')
-        if args.local_root or args.page:
-            parser.error('Preview output has injected content; --local-root and --page apply to formal checks')
+        if args.local_root or args.page or args.all_production:
+            parser.error('Preview mode cannot be combined with --local-root, --page, or --all-production')
     elif args.preview_sha or args.task or not args.main_sha:
         parser.error('Formal mode requires --main-sha; preview options require --preview-pr')
     if args.local_root and not args.local_root.is_dir():

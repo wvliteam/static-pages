@@ -12,7 +12,7 @@
 
 1. 保留用户改动，从最新 main 创建 preview/<task> 分支，必要时使用隔离检出；不 force push、不 reset 用户文件。
 2. 源数据、检查日志和截图放在忽略的 scratch/。可审阅网页位于 artifacts/<task>/public/，目录内使用相对资源；HTML 本身保存干净版本，预览标记由部署注入。
-3. 接收已有产物与本地检查结果；页面制作或本地结构问题由创建器处理。只显式暂存该任务所需的 HTML 和静态资源，不改正式首页或正式页数量。推送分支、创建同仓库 PR 指向 main，获取 PR 编号。
+3. 接收已有产物与本地检查 JSON；页面制作或本地结构问题由创建器处理。运行 `scripts/verify_artifact_manifest.py --root artifacts/<task>/public --manifest <check.json>`；摘要不匹配时先重跑适用检查。只显式暂存该任务所需的 HTML 和静态资源，不改正式首页或正式页数量。推送分支、创建同仓库 PR 指向 main，获取 PR 编号。
 4. 等待本次 Pages workflow；从 Actions 摘要或 deployment.json 获取真实预览链接。不要仅凭推测路径声称上线。
 5. 用 `scripts/verify_deployment.py` 核对 deployment.json 的 PR head_sha 等于本次源提交，并核对预览生成文件的 SHA-256。浏览器打开后可确认可见预览标记；页面内容和交互检查归创建器。正式页面的哈希应仍等于 main/docs 文件。
 
@@ -50,3 +50,5 @@ Pages 配置为 workflow 时，默认通过 github-pages 环境限制可信 main
 - [deploy-pages](https://github.com/actions/deploy-pages)
 - [工作流事件与 pull_request_target](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)
 - [Actions 计费](https://docs.github.com/en/actions/concepts/billing-and-usage)
+迁移后、提交前运行 `scripts/compare_promotion.py --repo-root . --preview-sha <approved-preview-sha> --task <task> --manifest <builder-check.json> --target-root <formal-page-directory>`。它从批准 SHA 的 Git archive 读取源文件，并验证 builder 检查摘要、目标文件集合和字节；不一致时停止合并并处理差异。
+迁移后的提交是新的候选版本。推送后等待候选工作流对最新 PR head 和测试合并提交运行 `static-pages-candidate` 与 `static-pages-main-ready`；确认当前版本的检查通过、摘要比较通过、tracked artifacts 无输出后，再依仓库保护规则合并。预览阶段旧 SHA 的检查不能替代此关口。
