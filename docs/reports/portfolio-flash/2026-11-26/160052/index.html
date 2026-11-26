@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>财经快讯 · 专业盯盘座舱</title>
+<style>
+:root{
+  --bg:#f3f0ea;--card:#fffdf9;--card-subtle:#f8f5ef;--ink:#172333;--sub:#66717d;
+  --line:#d7d1c7;--line-subtle:#ebe6de;
+  --up:#b42318;--upbg:#fcedeb;--upborder:#e7b9b3;
+  --down:#26734d;--downbg:#e8f3ec;--downborder:#b8d7c3;
+  --neu:#5f6974;--neubg:#f3f0ea;--neuborder:#d7d1c7;
+  --wait:#906b1b;--waitbg:#f8f1dc;--waitborder:#ddc889;
+  --accent:#173f5f;--accentbg:#e8f0f4;--accentborder:#b6ccd8;
+  --purple:#725567;--purplebg:#f2eaf0;--purpleborder:#d9c1d0;
+  --live:#1a7f37;--livebg:#dafbe1;
+  --mono:ui-monospace,SFMono-Regular,"Roboto Mono",Menlo,Monaco,Consolas,monospace;
+  --radius-sm:3px;--radius:6px;--radius-lg:8px;
+  --shadow:0 1px 2px rgba(23,35,51,.05),0 5px 18px rgba(23,35,51,.035);
+  --display:ui-serif,Georgia,"Songti SC","STSong",serif;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;padding:18px 16px 56px;background:var(--bg);color:var(--ink);
+  font:13px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto}
+
+/* 金融等宽数字 */
+.num,.code,.time,.price,.chg{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+
+/* 顶部标题区 (紧凑纯净) */
+.top-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;padding:0 0 11px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:8px}
+.main-title{font-family:var(--display);font-size:22px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;letter-spacing:-0.4px}
+.node-badge{background:var(--accent);color:#fff;padding:4px 7px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.02em}
+.header-meta{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:8px}
+
+.btn-copy{
+  background:transparent;border:1px solid var(--accent);border-radius:var(--radius-sm);
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:28px;height:28px;padding:0;color:var(--accent);cursor:pointer;
+  transition:all .12s ease;
+}
+.btn-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* 状态徽标 (State Badges) */
+.badge{display:inline-block;border-radius:var(--radius-sm);padding:2px 5px;font-size:10px;font-weight:600;white-space:nowrap;line-height:1.25}
+.b-live{background:var(--livebg);color:var(--live);border:1px solid var(--downborder)}
+.b-pre{background:var(--waitbg);color:var(--wait);border:1px solid var(--waitborder)}
+.b-closed{background:var(--neubg);color:var(--sub);border:1px solid var(--line)}
+.b-history{background:var(--purplebg);color:var(--purple);border:1px solid var(--purpleborder)}
+
+.tag-up{color:var(--up);background:var(--upbg);border:1px solid var(--upborder);font-weight:700}
+.tag-down{color:var(--down);background:var(--downbg);border:1px solid var(--downborder);font-weight:700}
+.tag-neu{color:var(--neu);background:var(--neubg);border:1px solid var(--neuborder)}
+
+.dot-live{width:5px;height:5px;border-radius:50%;background:var(--live);display:inline-block;animation:pulse-dot 1.8s infinite}
+@keyframes pulse-dot{
+  0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(26,127,55,0.7)}
+  70%{transform:scale(1);box-shadow:0 0 0 3px rgba(26,127,55,0)}
+  100%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(26,127,55,0)}
+}
+
+/* 章节通用标题 */
+.sec-head{
+  font-family:var(--display);font-size:15px;font-weight:700;margin:18px 0 8px;padding:0 0 6px;
+  border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+}
+.sec-head > span:first-child{display:flex;align-items:center;gap:7px}
+.sec-head > span:first-child::before{content:"";width:4px;height:15px;background:var(--accent);display:inline-block;border-radius:1px}
+.sec-head > span:last-child{font-family:inherit;font-size:11px!important;font-weight:500;color:var(--sub)!important;white-space:nowrap;
+}
+
+/* 1. 首屏决策黄金区：A股推演攻守矩阵 (精炼高密度) */
+.hero-matrix{
+  background:var(--card);border:1px solid var(--line);border-top:4px solid var(--accent);
+  border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.hero-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--line-subtle)}
+.hero-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:4px}
+
+.decision-bullets{display:flex;flex-direction:column;gap:4px}
+.d-bullet{
+  display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5;
+  padding:7px 9px;border-radius:var(--radius-sm);background:var(--card-subtle);border-left:2px solid var(--accent);
+}
+.d-bullet.alert{background:var(--upbg);border-left-color:var(--up);color:var(--ink)}
+.d-tag{font-weight:800;font-size:11px;flex-shrink:0;white-space:nowrap;color:var(--accent)}
+
+/* 2. 多Tab式全球核心指数看板 (超紧凑节省75%纵向空间) */
+.idx-tab-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+  overflow:hidden;margin-bottom:10px;
+}
+.idx-tabs{
+  display:flex;background:var(--card-subtle);border-bottom:1px solid var(--line);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.idx-tabs::-webkit-scrollbar{display:none}
+.idx-tab{
+  flex:1;min-width:68px;min-height:44px;padding:7px 4px;font-size:12px;font-weight:700;color:var(--sub);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;text-align:center;white-space:nowrap;transition:all .1s ease;
+}
+.idx-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card);box-shadow:inset 0 -1px 0 var(--accent)}
+
+.idx-pane{padding:8px 10px;display:none}
+.idx-pane.active{display:block}
+.idx-pane-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.idx-pane-name{font-size:11.5px;font-weight:800;color:var(--ink)}
+
+.idx-chips-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:6px}
+.t-chip{
+  background:transparent;border:0;border-bottom:1px solid var(--line-subtle);border-radius:0;
+  padding:7px 4px;display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.t-chip-left{display:flex;flex-direction:column}
+.t-chip-name{font-weight:700;font-size:11px;color:var(--ink)}
+.t-chip-price{font-size:12px;font-weight:800;color:var(--ink);font-family:var(--mono)}
+
+/* 3. 重点板块与核心个股异动 */
+.focus-board{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 12px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.focus-sec-title{font-family:var(--display);font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.sector-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.sector-pill{
+  display:inline-flex;align-items:center;gap:3px;background:var(--card-subtle);
+  border:1px solid var(--line-subtle);border-radius:var(--radius-sm);padding:2px 6px;font-size:11px;
+}
+
+.stock-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));column-gap:12px;row-gap:0}
+.s-mini-card{
+  background:transparent;border:0;border-bottom:1px solid var(--line-subtle);border-radius:0;
+  padding:7px 3px;display:flex;flex-direction:column;gap:3px;
+}
+.s-mini-top{display:flex;justify-content:space-between;align-items:baseline}
+.s-mini-name{font-weight:700;font-size:11.5px;color:var(--ink)}
+.s-mini-bot{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--sub)}
+
+/* 4. 持仓全景透视 (Tab 切换卡片) */
+.cockpit-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.cockpit-tabs{display:flex;background:var(--card-subtle);border-bottom:1px solid var(--line)}
+.cockpit-tab{
+  flex:1;min-height:44px;padding:7px;font-size:11.5px;font-weight:700;color:var(--sub);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;text-align:center;
+}
+.cockpit-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card)}
+.cockpit-content{padding:8px 10px}
+
+/* 个股卡片行 */
+.stock-card-row{
+  background:var(--card);border:0;border-bottom:1px solid var(--line-subtle);border-radius:0;
+  padding:8px 2px;margin-bottom:0;display:flex;flex-direction:column;gap:3px;
+}
+.stock-card-row:last-child{margin-bottom:0}
+.stock-line-1{display:flex;justify-content:space-between;align-items:baseline}
+.stock-line-2{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--sub);flex-wrap:wrap;gap:4px}
+.stock-hint{font-size:10.5px;color:var(--sub);background:var(--card-subtle);padding:2px 5px;border-radius:3px;margin-top:2px}
+
+/* ETF 穿透模块 (纯 CSS 变量暗黑适配) */
+.etf-block{
+  background:var(--card-subtle);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:8px;margin-bottom:6px;display:flex;flex-direction:column;gap:4px;
+}
+.etf-block:last-child{margin-bottom:0}
+.etf-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.etf-title{font-size:12px;font-weight:800;color:var(--ink)}
+.etf-driving{font-size:11px;color:var(--ink);line-height:1.35}
+.etf-chips{display:flex;flex-wrap:wrap;gap:4px}
+.holding-chip{
+  display:inline-flex;align-items:center;gap:3px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:2px 5px;font-size:10.5px;color:var(--ink);
+}
+
+/* 5. 影响市场的重大消息 (不求全而求精) */
+.major-news-list{display:flex;flex-direction:column;gap:6px}
+.news-item{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:11px 13px;display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow);
+}
+.news-item.impact-high{border-left:3px solid var(--up)}
+.news-item.impact-med{border-left:2px solid var(--accent)}
+
+.news-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:3px 8px}
+.news-title{flex:1 1 240px;min-width:0;font-size:12px;font-weight:800;color:var(--ink);overflow-wrap:anywhere}
+.news-meta{flex:0 1 auto;min-width:0;max-width:100%;font-size:10.5px;color:var(--sub);white-space:normal;overflow-wrap:anywhere}
+.news-meta a{white-space:nowrap}
+.news-body{font-size:12px;line-height:1.5;color:var(--ink)}
+.news-detail summary{
+  display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none;
+  color:var(--sub);font-size:12px;line-height:1.4;touch-action:manipulation;
+}
+.news-detail summary::-webkit-details-marker{display:none}
+.news-detail summary:focus-visible,.live-news-toggle:focus-visible,.idx-tab:focus-visible,.cockpit-tab:focus-visible,.btn-copy:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+.news-preview{flex:1;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:var(--ink)}
+.news-detail-toggle{flex:none;white-space:nowrap;color:var(--accent);font-weight:700}
+.news-detail-toggle-close{display:none}
+.news-detail[open] .news-detail-toggle-open{display:none}
+.news-detail[open] .news-detail-toggle-close{display:inline}
+.news-detail-content{display:flex;flex-direction:column;gap:3px;padding-top:3px}
+.live-news-toggle{display:flex;align-items:center;min-height:44px;cursor:pointer;touch-action:manipulation}
+.news-impact{
+  display:flex;align-items:flex-start;gap:6px;font-size:11px;background:transparent;
+  padding:5px 0 0;border-top:1px solid var(--line-subtle);border-radius:0;color:var(--ink);
+}
+.news-impact-label{flex:none;white-space:nowrap}
+.news-impact-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.chain-inline{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:2px;font-size:10.5px;color:var(--sub)}
+
+@media (max-width:600px){
+  .stock-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:7px;row-gap:4px}
+  .s-mini-card{background:var(--card-subtle);border:1px solid var(--line-subtle);border-radius:var(--radius-sm);padding:6px}
+  .news-top{flex-direction:column;align-items:stretch}
+  .news-title,.news-meta{flex:none;width:100%}
+  .d-bullet{font-size:13px;line-height:1.5}
+  .d-tag{font-size:12px}
+  .news-title{font-size:13px}
+  .news-meta{font-size:11px}
+  .news-body{font-size:13px;line-height:1.5}
+  .news-impact{font-size:12px;line-height:1.45}
+  .chain-inline{font-size:11px}
+}
+
+/* 暗色模式适配 (Dark Mode) - 纯 CSS 变量映射 */
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111923;--card:#18232e;--card-subtle:#1d2935;--ink:#e9edf0;--sub:#9aa6af;
+    --line:#34424e;--line-subtle:#293642;
+    --up:#f0786e;--upbg:#352423;--upborder:#6c3934;
+    --down:#75bd91;--downbg:#20352a;--downborder:#385a43;
+    --neu:#a1abb3;--neubg:#202b36;--neuborder:#394651;
+    --wait:#d7b66d;--waitbg:#332f22;--waitborder:#625538;
+    --accent:#9bbbd0;--accentbg:#233542;--accentborder:#496477;
+    --purple:#c4a1bb;--purplebg:#302733;--purpleborder:#594553;
+    --live:#75bd91;--livebg:#20352a;
+  }
+  body{background:var(--bg);color:var(--ink)}
+  .d-bullet.alert{color:#ffb4ab}
+}
+
+@media (min-width:960px){
+  body{padding-left:28px;padding-right:28px}
+  .overview-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(360px,.88fr);align-items:start;gap:0 22px}
+  .overview-grid .hero-matrix{grid-column:1;grid-row:1 / span 2}
+  .overview-grid .sec-head{grid-column:2;margin-top:0}
+  .overview-grid .idx-tab-card{grid-column:2;margin-bottom:0}
+  .stock-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .major-news-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <!-- 动态渲染区 -->
+</div>
+
+<script type="application/json" id="report-data">
+{
+  "period": "11-26 16:01:04 实时持仓监测 · A股已过常规收盘时间",
+  "generatedAt": "2026-11-26 16:01:05 CST",
+  "node": "16:01",
+  "observedAt": "2026-11-26T16:01:04+08:00",
+  "analysisMode": "live",
+  "scheduledNode": "1600",
+  "market_states": {
+    "A": {
+      "phase": "CLOSED",
+      "expectedPhase": "CLOSED",
+      "label": "已过常规收盘时间",
+      "asof": "2026-11-26T16:01:03+08:00",
+      "quoteFresh": true,
+      "calendarVerified": false,
+      "basis": "weekday_hours_and_quote_timestamps"
+    },
+    "HK": {
+      "phase": "CLOSED",
+      "expectedPhase": "CLOSED",
+      "label": "已过常规收盘时间",
+      "asof": "2026-11-26T16:01:02+08:00",
+      "quoteFresh": true,
+      "calendarVerified": false,
+      "basis": "weekday_hours_and_quote_timestamps"
+    },
+    "KR": {
+      "phase": "CLOSED",
+      "expectedPhase": "CLOSED",
+      "label": "已过常规收盘时间",
+      "asof": "2026-11-26T14:32:50+08:00",
+      "quoteFresh": false,
+      "calendarVerified": false,
+      "basis": "weekday_hours_and_quote_timestamps"
+    },
+    "JP": {
+      "phase": "CLOSED",
+      "expectedPhase": "CLOSED",
+      "label": "已过常规收盘时间",
+      "asof": null,
+      "quoteFresh": false,
+      "calendarVerified": false,
+      "basis": "weekday_hours_and_quote_timestamps"
+    },
+    "US": {
+      "phase": "CLOSED",
+      "expectedPhase": "CLOSED",
+      "label": "常规休市时段",
+      "asof": "2026-11-26T09:17:10+08:00",
+      "quoteFresh": false,
+      "calendarVerified": false,
+      "basis": "weekday_hours_and_quote_timestamps"
+    },
+    "FUTURES": {
+      "phase": "UNKNOWN",
+      "label": "各合约按报价时间核验",
+      "asof": "2026-11-26T16:01:03+08:00",
+      "calendarVerified": false
+    }
+  },
+  "newsWindow": {
+    "start": "2026-11-25T16:01:04+08:00",
+    "end": "2026-11-26T16:01:04+08:00",
+    "mode": "rolling"
+  },
+  "win": "2026-11-25T16:01:04+08:00 -> 2026-11-26T16:01:04+08:00",
+  "counts": {
+    "total": 9,
+    "up": 5,
+    "down": 4,
+    "neutral": 0,
+    "watch": 9,
+    "covered": 9,
+    "gaps": 0
+  },
+  "groups": [
+    "消费电子/苹果链/XR设备",
+    "非银金融/证券/财富管理",
+    "有色金属/能源金属/锂资源",
+    "电力设备/风电设备/海上风电",
+    "中韩芯片",
+    "工业有色",
+    "创业板",
+    "纳指基金",
+    "中概互联"
+  ],
+  "quotes": [
+    {
+      "code": "002241",
+      "symbol": "002241.SZ",
+      "thscode": "002241.SZ",
+      "market": "A-Share",
+      "price": "21.61",
+      "chg": "-0.96%",
+      "asof": "2026-11-26 16:01:01 CST",
+      "received_at": "2026-11-26T16:01:02.672578+08:00",
+      "session": "REGULAR",
+      "src": "HiThink Finance CLI",
+      "details": {
+        "open": 22.02,
+        "high": 22.15,
+        "low": 21.38,
+        "prev_price": 21.82,
+        "volume_shares": 55013560,
+        "turnover_cny": 1194571350.0
+      },
+      "name": "歌尔股份"
+    },
+    {
+      "code": "600958",
+      "symbol": "600958.SH",
+      "thscode": "600958.SH",
+      "market": "A-Share",
+      "price": "7.80",
+      "chg": "-1.64%",
+      "asof": "2026-11-26 16:01:01 CST",
+      "received_at": "2026-11-26T16:01:02.673009+08:00",
+      "session": "REGULAR",
+      "src": "HiThink Finance CLI",
+      "details": {
+        "open": 7.93,
+        "high": 7.95,
+        "low": 7.77,
+        "prev_price": 7.93,
+        "volume_shares": 34761065,
+        "turnover_cny": 272088380.0
+      },
+      "name": "东方证券"
+    },
+    {
+      "code": "002460",
+      "symbol": "002460.SZ",
+      "thscode": "002460.SZ",
+      "market": "A-Share",
+      "price": "31.45",
+      "chg": "+0.54%",
+      "asof": "2026-11-26 16:01:01 CST",
+      "received_at": "2026-11-26T16:01:02.673306+08:00",
+      "session": "REGULAR",
+      "src": "HiThink Finance CLI",
+      "details": {
+        "open": 31.83,
+        "high": 32.23,
+        "low": 31.05,
+        "prev_price": 31.28,
+        "volume_shares": 26171168,
+        "turnover_cny": 830375170.0
+      },
+      "name": "赣锋锂业"
+    },
+    {
+      "code": "601615",
+      "symbol": "601615.SH",
+      "thscode": "601615.SH",
+      "market": "A-Share",
+      "price": "6.67",
+      "chg": "-1.04%",
+      "asof": "2026-11-26 16:01:01 CST",
+      "received_at": "2026-11-26T16:01:02.673607+08:00",
+      "session": "REGULAR",
+      "src": "HiThink Finance CLI",
+      "details": {
+        "open": 6.8,
+        "high": 6.87,
+        "low": 6.61,
+        "prev_price": 6.74,
+        "volume_shares": 34901353,
+        "turnover_cny": 235546130.0
+      },
+      "name": "明阳智能"
+    },
+    {
+      "code": "513310",
+      "name": "中韩芯片",
+      "market": "A-Share ETF",
+      "price": "3.202",
+      "chg": "-0.74%",
+      "asof": "2026-11-26 15:34:59 CST",
+      "session": "REGULAR",
+      "src": "Sina Finance",
+      "details": {
+        "open": 3.318,
+        "high": 3.321,
+        "low": 3.154,
+        "prev_close": 3.226,
+        "volume_shares": 5009254876,
+        "turnover_cny": 16259095746.0
+      },
+      "symbol": "513310.SH"
+    },
+    {
+      "code": "560860",
+      "name": "工业有色",
+      "market": "A-Share ETF",
+      "price": "1.094",
+      "chg": "+1.39%",
+      "asof": "2026-11-26 15:34:59 CST",
+      "session": "REGULAR",
+      "src": "Sina Finance",
+      "details": {
+        "open": 1.092,
+        "high": 1.114,
+        "low": 1.084,
+        "prev_close": 1.079,
+        "volume_shares": 171648712,
+        "turnover_cny": 188634232.0
+      },
+      "symbol": "560860.SH"
+    },
+    {
+      "code": "159915",
+      "name": "创业板",
+      "market": "A-Share ETF",
+      "price": "2.217",
+      "chg": "+0.82%",
+      "asof": "2026-11-26 15:35:15 CST",
+      "session": "REGULAR",
+      "src": "Sina Finance",
+      "details": {
+        "open": 2.228,
+        "high": 2.242,
+        "low": 2.17,
+        "prev_close": 2.199,
+        "volume_shares": 5866536384,
+        "turnover_cny": 12942412821.468
+      },
+      "symbol": "159915.SZ"
+    },
+    {
+      "code": "513390",
+      "name": "纳指基金",
+      "market": "A-Share ETF",
+      "price": "2.271",
+      "chg": "+1.79%",
+      "asof": "2026-11-26 15:34:59 CST",
+      "session": "REGULAR",
+      "src": "Sina Finance",
+      "details": {
+        "open": 2.27,
+        "high": 2.309,
+        "low": 2.26,
+        "prev_close": 2.231,
+        "volume_shares": 75814406,
+        "turnover_cny": 173072614.0
+      },
+      "symbol": "513390.SH"
+    },
+    {
+      "code": "513050",
+      "name": "中概互联",
+      "market": "A-Share ETF",
+      "price": "0.858",
+      "chg": "+1.42%",
+      "asof": "2026-11-26 15:34:59 CST",
+      "session": "REGULAR",
+      "src": "Sina Finance",
+      "details": {
+        "open": 0.867,
+        "high": 0.871,
+        "low": 0.853,
+        "prev_close": 0.846,
+        "volume_shares": 2685380664,
+        "turnover_cny": 2311893679.0
+      },
+      "symbol": "513050.SH"
+    }
+  ],
+  "gaps": [],
+  "broad_indices": [
+    {
+      "category": "A股",
+      "code": "000001",
+      "name": "上证指数",
+      "price": "3476.88",
+      "chg": "+0.01%",
+      "chg_pct": 0.01,
+      "high": "3497.81",
+      "low": "3455.04",
+      "asof": "2026-11-26 16:00:27 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "A股",
+      "code": "399001",
+      "name": "深证成指",
+      "price": "10084.04",
+      "chg": "-0.02%",
+      "chg_pct": -0.02,
+      "high": "10235.50",
+      "low": "9979.06",
+      "asof": "2026-11-26 16:00:15 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "A股",
+      "code": "399006",
+      "name": "创业板指",
+      "price": "2189.82",
+      "chg": "+0.29%",
+      "chg_pct": 0.29,
+      "high": "2227.41",
+      "low": "2155.01",
+      "asof": "2026-11-26 16:00:30 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "A股",
+      "code": "000688",
+      "name": "科创50",
+      "price": "1169.99",
+      "chg": "-1.36%",
+      "chg_pct": -1.36,
+      "high": "1202.31",
+      "low": "1156.57",
+      "asof": "2026-11-26 16:00:09 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "港股",
+      "code": "HSI",
+      "name": "恒生指数",
+      "price": "22251.62",
+      "chg": "+1.30%",
+      "chg_pct": 1.3,
+      "high": "22543.750",
+      "low": "22217.010",
+      "asof": "2026-11-26 16:01:02 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "港股",
+      "code": "HSTECH",
+      "name": "恒生科技",
+      "price": "3425.51",
+      "chg": "+1.40%",
+      "chg_pct": 1.4,
+      "high": "3514.600",
+      "low": "3423.160",
+      "asof": "2026-11-26 16:01:02 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "港股",
+      "code": "HSCEI",
+      "name": "国企指数",
+      "price": "7502.95",
+      "chg": "+1.60%",
+      "chg_pct": 1.6,
+      "high": "7597.540",
+      "low": "7472.460",
+      "asof": "2026-11-26 16:01:02 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "美股",
+      "code": ".IXIC",
+      "name": "纳斯达克",
+      "price": "23585.80",
+      "chg": "-0.62%",
+      "chg_pct": -0.62,
+      "high": "23627.45",
+      "low": "22632.40",
+      "asof": "2026-11-26 06:15:59 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "美股",
+      "code": ".NDX",
+      "name": "纳指100",
+      "price": "26046.90",
+      "chg": "-0.64%",
+      "chg_pct": -0.64,
+      "high": "26081.65",
+      "low": "24970.66",
+      "asof": "2026-11-26 06:15:59 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "美股",
+      "code": "SOX",
+      "name": "费城半导体",
+      "price": "8,774.86",
+      "chg": "-0.65%",
+      "chg_pct": -0.65,
+      "high": "8781.0071",
+      "low": "8129.2345",
+      "asof": "2026-11-26 06:16:01 CST",
+      "src": "Sina US Finance"
+    },
+    {
+      "category": "美股",
+      "code": ".INX",
+      "name": "标普500",
+      "price": "7182.78",
+      "chg": "-0.25%",
+      "chg_pct": -0.25,
+      "high": "7199.31",
+      "low": "6970.11",
+      "asof": "2026-11-26 05:32:06 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "美股",
+      "code": ".DJI",
+      "name": "道琼斯",
+      "price": "50182.95",
+      "chg": "+0.33%",
+      "chg_pct": 0.33,
+      "high": "50395.24",
+      "low": "48913.74",
+      "asof": "2026-11-26 05:32:17 CST",
+      "src": "Tencent Finance"
+    },
+    {
+      "category": "期货/夜盘",
+      "code": "NQ",
+      "name": "纳指期货",
+      "price": "26248.54",
+      "chg": "+0.57%",
+      "chg_pct": 0.5681554774379589,
+      "high": "26436.000",
+      "low": "25997.500",
+      "asof": "2026-11-26 16:01:03 CST",
+      "src": "Sina Futures"
+    },
+    {
+      "category": "期货/夜盘",
+      "code": "CHA50CFD",
+      "name": "富时中国A50",
+      "price": "12521.03",
+      "chg": "+0.53%",
+      "chg_pct": 0.5301485347250153,
+      "high": "12582.000",
+      "low": "12336.000",
+      "asof": "2026-11-26 16:01:03 CST",
+      "src": "Sina Futures"
+    },
+    {
+      "category": "期货/夜盘",
+      "code": "ES",
+      "name": "标普期货",
+      "price": "7224.04",
+      "chg": "+0.39%",
+      "chg_pct": 0.39312093944341525,
+      "high": "7254.750",
+      "low": "7187.000",
+      "asof": "2026-11-26 16:01:03 CST",
+      "src": "Sina Futures"
+    },
+    {
+      "category": "期货/夜盘",
+      "code": "GC",
+      "name": "COMEX黄金",
+      "price": "3595.18",
+      "chg": "+0.86%",
+      "chg_pct": 0.857880267070637,
+      "high": "3634.700",
+      "low": "3578.800",
+      "asof": "2026-11-26 16:01:03 CST",
+      "src": "Sina Futures"
+    },
+    {
+      "category": "期货/夜盘",
+      "code": "CAD",
+      "name": "伦铜 (LME)",
+      "price": "11878.75",
+      "chg": "+1.97%",
+      "chg_pct": 1.9678956178376756,
+      "high": "12088.500",
+      "low": "11822.500",
+      "asof": "2026-11-26 16:00:05 CST",
+      "src": "Sina Futures"
+    }
+  ],
+  "stock_sectors": [
+    {
+      "stock_code": "002241",
+      "stock_name": "歌尔股份",
+      "stock_price": "21.61",
+      "stock_chg": "-0.96%",
+      "stock_pct": -0.96,
+      "sector_code": "159732",
+      "sector_name": "消费电子ETF",
+      "sector_price": "0.910",
+      "sector_chg": "-0.22%",
+      "sector_pct": -0.22,
+      "industry": "消费电子/苹果链/XR设备",
+      "alpha": "-0.74%",
+      "alpha_val": -0.74,
+      "linkage": "轻微落后板块 (-0.74%)",
+      "status": "mild_underperform",
+      "stock_asof": "2026-11-26 16:01:01 CST",
+      "sector_asof": "2026-11-26 16:00:54 CST",
+      "src": "HiThink Finance CLI / Tencent Finance"
+    },
+    {
+      "stock_code": "600958",
+      "stock_name": "东方证券",
+      "stock_price": "7.80",
+      "stock_chg": "-1.64%",
+      "stock_pct": -1.64,
+      "sector_code": "512880",
+      "sector_name": "证券ETF",
+      "sector_price": "0.943",
+      "sector_chg": "-1.26%",
+      "sector_pct": -1.26,
+      "industry": "非银金融/证券/财富管理",
+      "alpha": "-0.38%",
+      "alpha_val": -0.3799999999999999,
+      "linkage": "轻微落后板块 (-0.38%)",
+      "status": "mild_underperform",
+      "stock_asof": "2026-11-26 16:01:01 CST",
+      "sector_asof": "2026-11-26 16:00:39 CST",
+      "src": "HiThink Finance CLI / Tencent Finance"
+    },
+    {
+      "stock_code": "002460",
+      "stock_name": "赣锋锂业",
+      "stock_price": "31.45",
+      "stock_chg": "+0.54%",
+      "stock_pct": 0.54,
+      "sector_code": "512400",
+      "sector_name": "有色金属ETF",
+      "sector_price": "1.233",
+      "sector_chg": "+1.65%",
+      "sector_pct": 1.65,
+      "industry": "有色金属/能源金属/锂资源",
+      "alpha": "-1.11%",
+      "alpha_val": -1.1099999999999999,
+      "linkage": "轻微落后板块 (-1.11%)",
+      "status": "mild_underperform",
+      "stock_asof": "2026-11-26 16:01:01 CST",
+      "sector_asof": "2026-11-26 16:01:00 CST",
+      "src": "HiThink Finance CLI / Tencent Finance"
+    },
+    {
+      "stock_code": "601615",
+      "stock_name": "明阳智能",
+      "stock_price": "6.67",
+      "stock_chg": "-1.04%",
+      "stock_pct": -1.04,
+      "sector_code": "561170",
+      "sector_name": "绿电ETF",
+      "sector_price": "1.130",
+      "sector_chg": "0.00%",
+      "sector_pct": 0.0,
+      "industry": "电力设备/风电设备/海上风电",
+      "alpha": "-1.04%",
+      "alpha_val": -1.04,
+      "linkage": "轻微落后板块 (-1.04%)",
+      "status": "mild_underperform",
+      "stock_asof": "2026-11-26 16:01:01 CST",
+      "sector_asof": "2026-11-26 16:00:51 CST",
+      "src": "HiThink Finance CLI / Tencent Finance"
+    }
+  ],
+  "etf_holdings": [
+    {
+      "etf_code": "513310",
+      "etf_name": "中韩芯片",
+      "etf_price": "3.202",
+      "etf_chg": "-0.74%",
+      "etf_pct": -0.74,
+      "holdings": [
+        {
+          "code": "000660.KS",
+          "us_ticker": "HXSCF",
+          "name": "SK海力士",
+          "weight": "16.8%",
+          "price": "1,053,000",
+          "chg": "+2.23%",
+          "chg_pct": 2.23,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 14:30:24 CST",
+          "src": "Tencent Finance",
+          "market": "KR"
+        },
+        {
+          "code": "005930.KS",
+          "us_ticker": "SSNLF",
+          "name": "三星电子",
+          "weight": "15.4%",
+          "price": "171,300",
+          "chg": "+0.35%",
+          "chg_pct": 0.35,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 14:30:05 CST",
+          "src": "Tencent Finance",
+          "market": "KR"
+        },
+        {
+          "code": "688981",
+          "us_ticker": null,
+          "name": "中芯国际",
+          "weight": "9.2%",
+          "price": "116.50",
+          "chg": "-4.51%",
+          "chg_pct": -4.51,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:38 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "002371",
+          "us_ticker": null,
+          "name": "北方华创",
+          "weight": "7.5%",
+          "price": "479.44",
+          "chg": "-3.14%",
+          "chg_pct": -3.14,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:57 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "688041",
+          "us_ticker": null,
+          "name": "海光信息",
+          "weight": "5.4%",
+          "price": "157.88",
+          "chg": "-0.04%",
+          "chg_pct": -0.04,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:02 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        }
+      ],
+      "driving": "核心重仓多空互现：拉动项 SK海力士(+2.23%) vs 拖累项 中芯国际(-4.51%)、北方华创(-3.14%)",
+      "missing_constituents": []
+    },
+    {
+      "etf_code": "560860",
+      "etf_name": "工业有色",
+      "etf_price": "1.094",
+      "etf_chg": "+1.39%",
+      "etf_pct": 1.39,
+      "holdings": [
+        {
+          "code": "601899",
+          "us_ticker": null,
+          "name": "紫金矿业",
+          "weight": "14.2%",
+          "price": "23.75",
+          "chg": "+3.40%",
+          "chg_pct": 3.4,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:03 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "601600",
+          "us_ticker": null,
+          "name": "中国铝业",
+          "weight": "9.1%",
+          "price": "7.49",
+          "chg": "+0.67%",
+          "chg_pct": 0.67,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:52 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "603993",
+          "us_ticker": null,
+          "name": "洛阳钼业",
+          "weight": "8.5%",
+          "price": "11.86",
+          "chg": "+2.24%",
+          "chg_pct": 2.24,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:51 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "600547",
+          "us_ticker": null,
+          "name": "山东黄金",
+          "weight": "6.2%",
+          "price": "23.30",
+          "chg": "+3.10%",
+          "chg_pct": 3.1,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:38 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        }
+      ],
+      "driving": "主要受权重股 紫金矿业(+3.40%)、洛阳钼业(+2.24%)、山东黄金(+3.10%) 走强拉动",
+      "missing_constituents": []
+    },
+    {
+      "etf_code": "159915",
+      "etf_name": "创业板",
+      "etf_price": "2.217",
+      "etf_chg": "+0.82%",
+      "etf_pct": 0.82,
+      "holdings": [
+        {
+          "code": "300750",
+          "us_ticker": null,
+          "name": "宁德时代",
+          "weight": "18.5%",
+          "price": "204.22",
+          "chg": "-2.02%",
+          "chg_pct": -2.02,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:24 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "300059",
+          "us_ticker": null,
+          "name": "东方财富",
+          "weight": "7.3%",
+          "price": "17.53",
+          "chg": "-1.07%",
+          "chg_pct": -1.07,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:30 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "300124",
+          "us_ticker": null,
+          "name": "汇川技术",
+          "weight": "4.9%",
+          "price": "51.80",
+          "chg": "-0.82%",
+          "chg_pct": -0.82,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:00:51 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        },
+        {
+          "code": "300274",
+          "us_ticker": null,
+          "name": "阳光电源",
+          "weight": "4.5%",
+          "price": "70.70",
+          "chg": "+0.30%",
+          "chg_pct": 0.3,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:00 CST",
+          "src": "Tencent Finance",
+          "market": "A-Share"
+        }
+      ],
+      "driving": "主要受重仓股 宁德时代(-2.02%)、东方财富(-1.07%)、汇川技术(-0.82%) 调整拖累",
+      "missing_constituents": []
+    },
+    {
+      "etf_code": "513390",
+      "etf_name": "纳指基金",
+      "etf_price": "2.271",
+      "etf_chg": "+1.79%",
+      "etf_pct": 1.79,
+      "holdings": [
+        {
+          "code": "NVDA",
+          "us_ticker": null,
+          "name": "英伟达",
+          "weight": "8.9%",
+          "price": "149.30",
+          "chg": "-3.91%",
+          "chg_pct": -3.91,
+          "session": "CLOSED",
+          "pre_time": "Nov 25 07:59PM EST",
+          "close_price": "149.30",
+          "close_chg": "-3.91%",
+          "asof": "2026-11-26 09:16:23 CST",
+          "src": "Sina US Realtime",
+          "market": "US"
+        },
+        {
+          "code": "AAPL",
+          "us_ticker": null,
+          "name": "苹果",
+          "weight": "8.7%",
+          "price": "355.58",
+          "chg": "+0.43%",
+          "chg_pct": 0.43,
+          "session": "CLOSED",
+          "pre_time": "Nov 25 07:59PM EST",
+          "close_price": "355.58",
+          "close_chg": "+0.43%",
+          "asof": "2026-11-26 09:14:57 CST",
+          "src": "Sina US Realtime",
+          "market": "US"
+        },
+        {
+          "code": "MSFT",
+          "us_ticker": null,
+          "name": "微软",
+          "weight": "7.8%",
+          "price": "489.93",
+          "chg": "-1.25%",
+          "chg_pct": -1.25,
+          "session": "CLOSED",
+          "pre_time": "Nov 25 07:59PM EST",
+          "close_price": "489.93",
+          "close_chg": "-1.25%",
+          "asof": "2026-11-26 08:59:54 CST",
+          "src": "Sina US Realtime",
+          "market": "US"
+        }
+      ],
+      "driving": "主要受重仓股 英伟达(-3.91%)、微软(-1.25%) 调整拖累",
+      "missing_constituents": []
+    },
+    {
+      "etf_code": "513050",
+      "etf_name": "中概互联",
+      "etf_price": "0.858",
+      "etf_chg": "+1.42%",
+      "etf_pct": 1.42,
+      "holdings": [
+        {
+          "code": "00700",
+          "us_ticker": null,
+          "name": "腾讯控股",
+          "weight": "28.4%",
+          "price": "342.00",
+          "chg": "+1.36%",
+          "chg_pct": 1.36,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:02 CST",
+          "src": "Tencent Finance",
+          "market": "Hong Kong"
+        },
+        {
+          "code": "09988",
+          "us_ticker": null,
+          "name": "阿里巴巴",
+          "weight": "21.6%",
+          "price": "82.30",
+          "chg": "+1.35%",
+          "chg_pct": 1.35,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:02 CST",
+          "src": "Tencent Finance",
+          "market": "Hong Kong"
+        },
+        {
+          "code": "PDD",
+          "us_ticker": null,
+          "name": "拼多多",
+          "weight": "12.1%",
+          "price": "87.42",
+          "chg": "+0.23%",
+          "chg_pct": 0.23,
+          "session": "CLOSED",
+          "pre_time": "Nov 25 08:01PM EST",
+          "close_price": "87.42",
+          "close_chg": "+0.23%",
+          "asof": "2026-11-26 09:17:10 CST",
+          "src": "Sina US Realtime",
+          "market": "US"
+        },
+        {
+          "code": "03690",
+          "us_ticker": null,
+          "name": "美团",
+          "weight": "9.5%",
+          "price": "62.60",
+          "chg": "+1.87%",
+          "chg_pct": 1.87,
+          "session": "REGULAR",
+          "pre_time": null,
+          "close_price": null,
+          "close_chg": null,
+          "asof": "2026-11-26 16:01:02 CST",
+          "src": "Tencent Finance",
+          "market": "Hong Kong"
+        }
+      ],
+      "driving": "主要受权重股 腾讯控股(+1.36%)、阿里巴巴(+1.35%)、美团(+1.87%) 走强拉动",
+      "missing_constituents": []
+    }
+  ],
+  "us_pre_market": [
+    {
+      "symbol": "NVDA",
+      "code": "NVDA",
+      "name": "英伟达",
+      "session": "CLOSED",
+      "price": "149.30",
+      "price_val": 149.3,
+      "chg": "-3.91%",
+      "chg_pct": -3.91,
+      "close_price": "149.30",
+      "close_chg": "-3.91%",
+      "pre_price": "151.22",
+      "pre_chg": "+1.29%",
+      "pre_time": "Nov 25 07:59PM EST",
+      "asof": "2026-11-26 09:16:23 CST",
+      "market": "US",
+      "received_at": "2026-11-26T16:01:04.157884+08:00",
+      "src": "Sina US Realtime"
+    },
+    {
+      "symbol": "AAPL",
+      "code": "AAPL",
+      "name": "苹果",
+      "session": "CLOSED",
+      "price": "355.58",
+      "price_val": 355.58,
+      "chg": "+0.43%",
+      "chg_pct": 0.43,
+      "close_price": "355.58",
+      "close_chg": "+0.43%",
+      "pre_price": "355.15",
+      "pre_chg": "-0.12%",
+      "pre_time": "Nov 25 07:59PM EST",
+      "asof": "2026-11-26 09:14:57 CST",
+      "market": "US",
+      "received_at": "2026-11-26T16:01:04.158722+08:00",
+      "src": "Sina US Realtime"
+    },
+    {
+      "symbol": "MSFT",
+      "code": "MSFT",
+      "name": "微软",
+      "session": "CLOSED",
+      "price": "489.93",
+      "price_val": 489.93,
+      "chg": "-1.25%",
+      "chg_pct": -1.25,
+      "close_price": "489.93",
+      "close_chg": "-1.25%",
+      "pre_price": "491.96",
+      "pre_chg": "+0.41%",
+      "pre_time": "Nov 25 07:59PM EST",
+      "asof": "2026-11-26 08:59:54 CST",
+      "market": "US",
+      "received_at": "2026-11-26T16:01:04.159201+08:00",
+      "src": "Sina US Realtime"
+    },
+    {
+      "symbol": "PDD",
+      "code": "PDD",
+      "name": "拼多多",
+      "session": "CLOSED",
+      "price": "87.42",
+      "price_val": 87.42,
+      "chg": "+0.23%",
+      "chg_pct": 0.23,
+      "close_price": "87.42",
+      "close_chg": "+0.23%",
+      "pre_price": "87.60",
+      "pre_chg": "+0.21%",
+      "pre_time": "Nov 25 08:01PM EST",
+      "asof": "2026-11-26 09:17:10 CST",
+      "market": "US",
+      "received_at": "2026-11-26T16:01:04.159762+08:00",
+      "src": "Sina US Realtime"
+    },
+    {
+      "symbol": "KWEB",
+      "code": "KWEB",
+      "name": "中概网络股ETF",
+      "session": "CLOSED",
+      "price": "21.17",
+      "price_val": 21.17,
+      "chg": "+0.09%",
+      "chg_pct": 0.09,
+      "close_price": "21.17",
+      "close_chg": "+0.09%",
+      "pre_price": "21.32",
+      "pre_chg": "+0.71%",
+      "pre_time": "Nov 25 07:59PM EST",
+      "asof": "2026-11-26 09:16:09 CST",
+      "market": "US",
+      "received_at": "2026-11-26T16:01:04.160225+08:00",
+      "src": "Sina US Realtime"
+    }
+  ],
+  "news": [
+    {
+      "id": "N01",
+      "time": "2026-11-26 15:59:18",
+      "title": "花旗：韩国股市稳定基金规模或达40万亿韩元",
+      "content": "【花旗：韩国股市稳定基金规模或达40万亿韩元】花旗称，韩国现有规模10.76万亿韩元的证券市场稳定基金，扩容后规模或达到20万亿至40万亿韩元。花旗估算，扩容后的潜在规模约相当于韩国综合股价指数与科斯达克指数当前总市值的0.5%至1%。花旗表示，现有10.76万亿韩元承诺额度中，当局最早下月就可动用1万亿至2万亿韩元投入市场。分析师金振旭在研报中写道：“如果该基金与国民年金公团同步入市，对股市的维稳效果会更强。”花旗测算，若韩国综合股价指数跌至4500点、4000点、3500点，国民年金公团可分别动用17万亿、39万亿、62万亿韩元资金买入本土股票。",
+      "codes": "东方证券(600958)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8152912.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N02",
+      "time": "2026-11-26 15:57:03",
+      "title": "联合化学：上海微电子不是启辰半导体的客户",
+      "content": "【联合化学：上海微电子不是启辰半导体的客户】有投资者在互动平台向联合化学提问，贵公司光刻胶产品，有应用于上海微电子的光刻机吗？上海微电子是贵公司客户吗？联合化学回复称，公司控股子公司启辰半导体新材料(盘锦)有限公司生产的苯乙烯类光刻胶单体主要用于KrF光刻胶树脂。上海微电子不是启辰半导体的客户。",
+      "codes": "中韩芯片(513310)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaawz8907632.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N03",
+      "time": "2026-11-26 15:56:51",
+      "title": "矽电股份：已在多个半导体产品领域打破海外厂商垄断",
+      "content": "【矽电股份：已在多个半导体产品领域打破海外厂商垄断】有投资者向矽电股份（301629.SZ）提问，您好，公司的产品是否属于国产替代？公司探针台应用于哪些领域？11月26日，公司在互动平台回答表示，公司探针测试系列产品属于半导体专用设备领域的国产替代产品，系中国大陆首家实现12英寸晶圆探针台产业化应用的设备厂商，已在多个半导体产品领域打破海外厂商垄断，稳居中国大陆探针台市场国产厂商市占率首位。",
+      "codes": "中韩芯片(513310)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaawz8907501.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N04",
+      "time": "2026-11-26 15:55:13",
+      "title": "广东：到2030年全域智算规模力争达到4000EFlops",
+      "content": "【广东：到2030年全域智算规模力争达到4000EFlops】11月26日，广东省政务服务和数据管理局和广东省发展和改革委员会印发《广东省算力发展“十五五”规划》（简称《规划》）。《规划》明确，到2028年，广东算力发展取得重要阶段性成效，智算规模突破1000EFlops（FP16），全省数据中心绿电使用占比超80%，新建大型及以上数据中心电能利用效率（PUE）小于1.2，存量数据中心能效显著提升，绿色低碳发展达到全国先进水平，边缘智算深入推进，算力设施建设布局持续优化，算力网络时延进一步降低，数算电网一体化协同建设水平显著提升，基本建成国际一流、国内领先的算力高地。到2030年，广东全域智算规模超2500EFlops（FP16），力争达到4000EFlops（FP16），算力供给结构深度适配新兴产业、未来产业发展，粤港澳大湾区一体化算力网络基本成型见效，韶关集群到全省主要城市网络时延在5毫秒以内，粤港澳跨境算力走廊建设取得突破性进展，绿电消费比例进一步提升，数算电网一体化协同发展机制成熟完善，前沿太空算力等未来技术布局抢占先机，粤港澳大湾区城市群算力发展水平引领全球。",
+      "codes": "明阳智能(601615)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaawz8905992.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N05",
+      "time": "2026-11-26 15:53:50",
+      "title": "三星电子重组存储芯片及系统LSI业务，加强AI芯片竞争力",
+      "content": "【三星电子重组存储芯片及系统LSI业务，加强AI芯片竞争力】11月26日，三星电子对半导体业务进行组织架构调整，将存储芯片研发业务统一纳入存储事业部负责人的直接管理，同时扩大负责芯片设计的系统LSI事业部销售与营销团队。此次重组旨在加快下一代存储技术研发，提升公司在AI芯片市场的竞争力。人事调整方面，原存储研发部门及DRAM研发团队负责人黄相俊（Hwang Sang-joon）获晋升，出任存储事业部负责人；原三星美国半导体业务存储营销团队负责人尹河龙（Yoon Ha-ryong）则获任命负责美国业务。",
+      "codes": "中韩芯片(513310)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxi3684929.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N06",
+      "time": "2026-11-26 15:52:46",
+      "title": "首创期货：跌停潮后弱势延续，碳酸锂远月再跌逾3%，逼近8万",
+      "content": "【首创期货：跌停潮后弱势延续，碳酸锂远月再跌逾3%，逼近8万】昨日碳酸锂主力2701合约暴跌8.08% 收报82620元 / 吨、创年内新低，今日盘面延续弱势，LC2706合约午间报80520元 / 吨、跌3.10%，盘中最低触及80520元；叠加今日氢氧化锂期货上市首日大跌6.56%，锂盐板块悲观情绪持续发酵，现货价格跟盘偏弱、下游以刚需采购为主。供应端宽松压力未减，数据显示本周碳酸锂周度产量环比增加340吨、重回增长，锂辉石到厂后盐厂产量爬升，头部云母矿山复产带动一体化产能释放，Mysteel预计11月国内碳酸锂产量约12.18万吨、环比增3.5%，江西枧下窝复产预期仍在发酵。需求端利空集中：12月电池排产环比大降17.6% 至266GWh，欧盟对中国电动车实行配额制、混动首年配额仅35万辆，下调明年出口动力需求预期。综合来看，供应增量与需求转弱共振，碳酸锂中期宽松格局未改，短期超跌后8万关口或有实货承接，但反弹动力不足，不排除在供应持续增长，需求走弱下，进一步下跌的可能。（首创期货）",
+      "codes": "赣锋锂业(002460)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8146760.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N07",
+      "time": "2026-11-26 15:48:51",
+      "title": "平头哥冲刺IPO之际，马云闪现办公区与员工亲切合影",
+      "content": "【平头哥冲刺IPO之际，马云闪现办公区与员工亲切合影】今日，社交平台有网友发帖称，“马云罕见露面，闪现平头哥”、“马老师闪现平头哥，现场氛围太热烈了”……网友们拍摄的画面显示，阿里巴巴集团创始人马云身穿灰色毛衣，与平头哥工作人员愉快地打招呼，并亲切地与大家合影。消息层面， 11月10日晚间，阿里巴巴集团发布公告，已向香港联交所交表，申请旗下子公司平头哥独立上市。上市完成后，平头哥仍将是阿里巴巴子公司。（新浪科技）",
+      "codes": "中概互联(513050)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxc1366338.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N08",
+      "time": "2026-11-26 15:46:25",
+      "title": "金价大跌，桥水基金创始人达利欧最新发声",
+      "content": "【金价大跌，桥水基金创始人达利欧最新发声】亿万富翁、桥水基金创始人瑞·达利欧近日表示，黄金作为投资者投资组合中不可替代的有效分散投资工具，无论处于投资周期的哪个阶段，将其配置比例控制在10%至15%都是明智之举。据知名贵金属资讯网站Kitco News当地时间25日报道，在最近的一次采访中，达利欧表示，投资者首先要明确自己需要多少资金才能维持生活稳定，并通过安全、多元化的投资来确保这一数额。  “在评估自己的资金规模时，必须考虑扣除通胀后的实际回报，因为你储存的是购买力。”达利欧表示，下一步是预估通胀将平均侵蚀你投资价值的约3%，同时还要为资产价值下跌50%的最坏情况做好准备。达利欧强调了在投资组合中持有黄金作为防御性资产的重要性。“当信贷体系正常时，大多数金融市场表现良好。”他说，“当信贷体系不正常、债务过多且存在重大问题时，黄金是一种有效的分散投资工具。因此，黄金应作为分散投资工具纳入投资组合。”“那么，具体比例是多少？我认为应该在10%到15%之间。”他说，“如果你持有传统投资组合，其中约有10%至15%配置在黄金上，那么当那种糟糕的时期来临时，你的投资组合将得到良好的分散。无论你预期市场好坏，在投资组合中配置10%至15%的黄金都是明智之举。”（中新经纬）",
+      "codes": "工业有色(560860)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxi3679207.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N09",
+      "time": "2026-11-26 15:42:59",
+      "title": "机构：26Q3新能源车销量年增7.6%，BEV、PHEV走势分化",
+      "content": "【机构：26Q3新能源车销量年增7.6%，BEV、PHEV走势分化】根据TrendForce集邦咨询最新调查，2026年第三季全球纯电动车（BEV）、插电混合式电动车（PHEV）及氢燃料电池车等新能源车（NEV）合计销量为579万辆，年增7.6%。若计入油电混合车（HEV），四类电动车共计占第三季全球汽车销量的35.2%，刷新单季历史纪录。TrendForce集邦咨询表示，第三季全球电动车市场呈现“纯电强、插混弱、油电稳定”走势，由于中国市场PHEV购买热度降温，加上油价高、纯电车续航增加、各国补贴政策向纯电倾斜等因素，BEV销量占比有所提升。",
+      "codes": "创业板(159915)",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8136077.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N10",
+      "time": "2026-11-26 16:00:43",
+      "title": "欧洲理事会主席科斯塔表示，目标是在峰会上更接近达成欧盟预算协议",
+      "content": "欧洲理事会主席科斯塔表示，目标是在峰会上更接近达成欧盟预算协议。",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxc1377536.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N11",
+      "time": "2026-11-26 16:00:25",
+      "title": "是否已有相关产品供货给华为？博力威回应",
+      "content": "【是否已有相关产品供货给华为？博力威回应】有投资者向博力威（688345.SH）提问，贵公司是否已经有相关产品供货给华为？11月26日，公司在互动平台回答表示，公司暂无相关产品供货给华为。后续如取得合作且达到信息披露标准，公司将根据相关规则，及时通过指定信息披露媒体发布公告。",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8153646.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N12",
+      "time": "2026-11-26 16:00:03",
+      "title": "欧股开盘普跌，德国DAX指数跌1.13%，英国富时100指数跌0.32%，法国C...",
+      "content": "欧股开盘普跌，德国DAX指数跌1.13%，英国富时100指数跌0.32%，法国CAC40指数跌0.5%，欧洲斯托克50指数跌1.82%，意大利富时MIB指数跌1.55%。",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxi3689462.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N13",
+      "time": "2026-11-26 16:00:01",
+      "title": "韩国房地产开发商牵头财团拟收购Homeplus",
+      "content": "【韩国房地产开发商牵头财团拟收购Homeplus】媒体援引知情人士消息，一家由房地产开发商牵头、物流公司参与的财团，已提交收购Homeplus的意向书。主承销商正在关注市场情况，同时接受其他竞标方提交无约束力报价。",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxc1376956.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N14",
+      "time": "2026-11-26 15:58:37",
+      "title": "特朗普表示不支持台独，国防部回应",
+      "content": "【特朗普表示不支持台独，国防部回应】11月26日下午，国防部举行例行记者会，国防部新闻发言人陈曦大校发布消息。陈曦：世界上只有一个中国，台独是绝路，统一挡不住。民进党当局应认清大势，彻底放弃以武谋独，以外谋独的幻想，否则只会成为历史和民族的罪人。（央视军事）",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxc1376034.d.html",
+      "verify": "已核原文"
+    },
+    {
+      "id": "N15",
+      "time": "2026-11-26 15:58:08",
+      "title": "工信部发布关于公开征求《生活饮用水用聚氯化铝》等24项强制性国家标准制修订计划项...",
+      "content": "工信部发布关于公开征求《生活饮用水用聚氯化铝》等24项强制性国家标准制修订计划项目意见的公示。",
+      "codes": "组合层面 / 宏观舆情",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8152050.d.html",
+      "verify": "已核原文"
+    }
+  ],
+  "coverage": [
+    {
+      "code": "002241",
+      "name": "歌尔股份",
+      "net": "down",
+      "strength": "中",
+      "note": "最新/收报 21.61 (-0.96%) ｜ 轻微落后板块 (-0.74%) (基准: 消费电子ETF -0.22%)"
+    },
+    {
+      "code": "600958",
+      "name": "东方证券",
+      "net": "down",
+      "strength": "中",
+      "note": "最新/收报 7.80 (-1.64%) ｜ 轻微落后板块 (-0.38%) (基准: 证券ETF -1.26%)"
+    },
+    {
+      "code": "002460",
+      "name": "赣锋锂业",
+      "net": "up",
+      "strength": "中",
+      "note": "最新/收报 31.45 (+0.54%) ｜ 轻微落后板块 (-1.11%) (基准: 有色金属ETF +1.65%)"
+    },
+    {
+      "code": "601615",
+      "name": "明阳智能",
+      "net": "down",
+      "strength": "中",
+      "note": "最新/收报 6.67 (-1.04%) ｜ 轻微落后板块 (-1.04%) (基准: 绿电ETF 0.00%)"
+    },
+    {
+      "code": "513310",
+      "name": "中韩芯片",
+      "net": "down",
+      "strength": "中",
+      "note": "最新/收报 3.202 (-0.74%) ｜ 核心重仓多空互现：拉动项 SK海力士(+2.23%) vs 拖累项 中芯国际(-4.51%)、北方华创(-3.14%)"
+    },
+    {
+      "code": "560860",
+      "name": "工业有色",
+      "net": "up",
+      "strength": "中",
+      "note": "最新/收报 1.094 (+1.39%) ｜ 主要受权重股 紫金矿业(+3.40%)、洛阳钼业(+2.24%)、山东黄金(+3.10%) 走强拉动"
+    },
+    {
+      "code": "159915",
+      "name": "创业板",
+      "net": "up",
+      "strength": "中",
+      "note": "最新/收报 2.217 (+0.82%) ｜ 主要受重仓股 宁德时代(-2.02%)、东方财富(-1.07%)、汇川技术(-0.82%) 调整拖累"
+    },
+    {
+      "code": "513390",
+      "name": "纳指基金",
+      "net": "up",
+      "strength": "中",
+      "note": "最新/收报 2.271 (+1.79%) ｜ 主要受重仓股 英伟达(-3.91%)、微软(-1.25%) 调整拖累"
+    },
+    {
+      "code": "513050",
+      "name": "中概互联",
+      "net": "up",
+      "strength": "中",
+      "note": "最新/收报 0.858 (+1.42%) ｜ 主要受权重股 腾讯控股(+1.36%)、阿里巴巴(+1.35%)、美团(+1.87%) 走强拉动"
+    }
+  ],
+  "focus": "【实时状态 · 16:01】A股已过常规收盘时间；美股常规休市时段。上证指数最近报价 3476.88 (+0.01%)，截至 2026-11-26 16:00:27 CST；东方证券 相对 证券ETF 的快照超额 Alpha -0.38%。基于最近有效报价复盘，跟踪仍在交易的关联市场，为下一交易时段准备条件式观察。",
+  "messages": [
+    {
+      "id": "M01",
+      "dir": "up",
+      "strength": "中",
+      "codes": "市场实时状态 · 跨市场观察",
+      "time": "11-26 16:01:04",
+      "asof": "2026-11-26T16:01:04+08:00",
+      "content": "【当前市场与外盘联动】A股已过常规收盘时间；美股常规休市时段。上证指数最近报价 3476.88 (+0.01%)，截至 2026-11-26 16:00:27 CST；纳指最近报价 23585.80 (-0.62%)，截至 2026-11-26 06:15:59 CST；纳指期货最近报价 26248.54 (+0.57%)，截至 2026-11-26 16:01:03 CST；富时A50最近报价 12521.03 (+0.53%)，截至 2026-11-26 16:01:03 CST。基于最近有效报价复盘，跟踪仍在交易的关联市场，为下一交易时段准备条件式观察。市场阶段按交易所本地工作日时钟及报价时间推断，尚未接入完整节假日日历。",
+      "nature": "行情资金",
+      "impact": "▲当前已获行情方向观察｜后续走势需由新增报价确认",
+      "chain": "已获指数与期指报价 ➔ 核对各市场状态和报价时间 ➔ 条件式跟踪持仓风险",
+      "source": "行情聚合包（各报价附来源与时间）",
+      "url": "https://pages.242556.xyz/",
+      "verify": "真实行情接口"
+    },
+    {
+      "id": "M02",
+      "dir": "up",
+      "strength": "中",
+      "codes": "持仓个股 · 当前Alpha观察",
+      "time": "11-26 16:01:04",
+      "asof": "2026-11-26T16:01:04+08:00",
+      "content": "【持仓个股与行业基准】歌尔股份(002241): 报 21.61 (-0.96%) ｜ 轻微落后板块 (-0.74%)；东方证券(600958): 报 7.80 (-1.64%) ｜ 轻微落后板块 (-0.38%)；赣锋锂业(002460): 报 31.45 (+0.54%) ｜ 轻微落后板块 (-1.11%)；明阳智能(601615): 报 6.67 (-1.04%) ｜ 轻微落后板块 (-1.04%)。东方证券 相对 证券ETF 的快照超额 Alpha -0.38%。仅比较已获取快照，不据此推断未提供的资金流向、成交量变化或产业催化。",
+      "nature": "行情资金",
+      "impact": "▲东方证券 相对 证券ETF 的快照超额 Alpha -0.38%｜持仓上涨 1 只 / 下跌 3 只",
+      "chain": "个股与基准有效报价 ➔ 相对涨跌幅比较 ➔ 观察后续偏离与风险",
+      "source": "持仓行情 / 行业基准映射",
+      "url": "https://pages.242556.xyz/",
+      "verify": "真实行情接口"
+    },
+    {
+      "id": "M03",
+      "dir": "up",
+      "strength": "强",
+      "codes": "持仓ETF · 底层资产观察",
+      "time": "11-26 16:01:04",
+      "asof": "2026-11-26T16:01:04+08:00",
+      "content": "【持仓ETF与关联资产】中韩芯片(513310): 报 3.202 (-0.74%) ｜ 核心重仓多空互现：拉动项 SK海力士(+2.23%) vs 拖累项 中芯国际(-4.51%)、北方华创(-3.14%)；工业有色(560860): 报 1.094 (+1.39%) ｜ 主要受权重股 紫金矿业(+3.40%)、洛阳钼业(+2.24%)、山东黄金(+3.10%) 走强拉动；创业板(159915): 报 2.217 (+0.82%) ｜ 主要受重仓股 宁德时代(-2.02%)、东方财富(-1.07%)、汇川技术(-0.82%) 调整拖累；纳指基金(513390): 报 2.271 (+1.79%) ｜ 主要受重仓股 英伟达(-3.91%)、微软(-1.25%) 调整拖累；中概互联(513050): 报 0.858 (+1.42%) ｜ 主要受权重股 腾讯控股(+1.36%)、阿里巴巴(+1.35%)、美团(+1.87%) 走强拉动。境内外报价可能来自不同交易阶段，按各自 asof 核验；未获实时净值与汇率时不量化折溢价或宣称套利机会。",
+      "nature": "行情资金",
+      "impact": "▲持仓ETF上涨 4 只 / 下跌 1 只｜按当前可用底层报价观察",
+      "chain": "已获底层资产报价 ➔ 核对交易阶段与缺失项 ➔ 观察ETF联动风险",
+      "source": "ETF及成分行情",
+      "url": "https://pages.242556.xyz/",
+      "verify": "真实行情接口"
+    },
+    {
+      "id": "M04",
+      "dir": "neutral",
+      "strength": "中",
+      "codes": "东方证券(600958) · 时事要闻",
+      "time": "2026-11-26 15:59:18",
+      "asof": "2026-11-26 16:01:05 CST",
+      "content": "【增量时事财经要闻精选】监测到最新重大资讯驱动：\n• [15:59] 【花旗：韩国股市稳定基金规模或达40万亿韩元】花旗称，韩国现有规模10.76万亿韩元的证券市场稳定基金，扩容后规模或达到20万亿至40万亿韩元。花旗估... (新浪财经7x24)；\n• [15:57] 【联合化学：上海微电子不是启辰半导体的客户】有投资者在互动平台向联合化学提问，贵公司光刻胶产品，有应用于上海微电子的光刻机吗？上海微电子是贵公司客户吗... (新浪财经7x24)；\n• [15:56] 【矽电股份：已在多个半导体产品领域打破海外厂商垄断】有投资者向矽电股份（301629.SZ）提问，您好，公司的产品是否属于国产替代？公司探针台应用于哪... (新浪财经7x24)",
+      "nature": "产业数据",
+      "impact": "●增量快讯已收录，方向尚未研判，需结合原文与盘面核验",
+      "chain": "宏观/产业突发快讯 ➔ 市场情绪发酵 ➔ 资金盘面反馈",
+      "source": "新浪财经7x24",
+      "url": "https://finance.sina.cn/7x24/2026-11-26/detail-inkaaaxe8152912.d.html",
+      "verify": "已核原文"
+    }
+  ],
+  "summary": "实际观测 2026-11-26 16:01:04 CST：有效持仓上涨 5 只、下跌 4 只、平稳 0 只。① 当前市场：A股已过常规收盘时间，美股常规休市时段；基于最近有效报价复盘，跟踪仍在交易的关联市场，为下一交易时段准备条件式观察。② 持仓个股：歌尔股份(002241): 报 21.61 (-0.96%) ｜ 轻微落后板块 (-0.74%)；东方证券(600958): 报 7.80 (-1.64%) ｜ 轻微落后板块 (-0.38%)；赣锋锂业(002460): 报 31.45 (+0.54%) ｜ 轻微落后板块 (-1.11%)；明阳智能(601615): 报 6.67 (-1.04%) ｜ 轻微落后板块 (-1.04%)；③ 持仓ETF：中韩芯片(513310): 报 3.202 (-0.74%) ｜ 核心重仓多空互现：拉动项 SK海力士(+2.23%) vs 拖累项 中芯国际(-4.51%)、北方华创(-3.14%)；工业有色(560860): 报 1.094 (+1.39%) ｜ 主要受权重股 紫金矿业(+3.40%)、洛阳钼业(+2.24%)、山东黄金(+3.10%) 走强拉动；创业板(159915): 报 2.217 (+0.82%) ｜ 主要受重仓股 宁德时代(-2.02%)、东方财富(-1.07%)、汇川技术(-0.82%) 调整拖累；纳指基金(513390): 报 2.271 (+1.79%) ｜ 主要受重仓股 英伟达(-3.91%)、微软(-1.25%) 调整拖累；中概互联(513050): 报 0.858 (+1.42%) ｜ 主要受权重股 腾讯控股(+1.36%)、阿里巴巴(+1.35%)、美团(+1.87%) 走强拉动；④ 实时要闻观察：花旗：韩国股市稳定基金规模或达40万亿韩元；联合化学：上海微电子不是启辰半导体的客户。",
+  "notice": "本快讯由 Antigravity 自动化监控组件实时生成，聚焦围绕 A 股预测加分析，行情数据经多源量化核验，仅供投研参考。"
+}
+</script>
+
+<script>
+(function(){
+  var d;
+  try{
+    d = JSON.parse(document.getElementById('report-data').textContent);
+  }catch(e){
+    var raw = document.getElementById('report-data') ? document.getElementById('report-data').textContent : '';
+    document.getElementById('app').innerHTML = '<div class="hero-matrix" style="border-top-color:var(--up)"><b>数据解析异常：</b>' + esc(e.message) + '</div>';
+    return;
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>'"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c];
+    });
+  }
+
+  function getChgTag(chgStr){
+    var s = String(chgStr || '');
+    if(s.indexOf('-') === 0) return 'tag-down';
+    if(s.indexOf('+') === 0) return 'tag-up';
+    return 'tag-neu';
+  }
+
+  var node = d.node || '盯盘';
+  var genAt = d.generatedAt || '';
+  var dateShort = genAt.length >= 10 ? genAt.substring(5, 16) : genAt;
+  var copyIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/></svg>';
+  var copiedIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12 4 4L19 6"/></svg>';
+  var copyResetTimer;
+
+  var h = '';
+
+  // 1. 顶部主标题
+  h += '<div class="top-header">';
+  h += '  <h1 class="main-title">';
+  h += '    <span>财经快讯 · 盯盘与预测</span>';
+  h += '    <span class="node-badge">' + esc(node) + '</span>';
+  h += '  </h1>';
+  h += '  <div class="header-meta">';
+  h += '    <span>' + esc(dateShort) + ' 汇聚 ｜ 涨红跌绿</span>';
+  h += '    <button type="button" class="btn-copy" id="btn-copy" onclick="copyBrief()" aria-label="复制速报" title="复制速报">' + copyIcon + '</button>';
+  h += '  </div>';
+  h += '</div>';
+
+  // 2. 首屏决策黄金区：A股推演攻守矩阵
+  var msgs = d.messages || [];
+  var m01 = msgs.find(function(m){ return m.id === 'M01'; }) || (msgs[0] || {});
+  var m02 = msgs.find(function(m){ return m.id === 'M02'; }) || (msgs[1] || {});
+  var m03 = msgs.find(function(m){ return m.id === 'M03'; }) || (msgs[2] || {});
+
+  h += '<div class="overview-grid">';
+  h += '<div class="hero-matrix">';
+  h += '  <div class="hero-head">';
+  h += '    <span class="hero-title">市场判断与组合观察</span>';
+  h += '    <span class="badge b-live"><span class="dot-live"></span> 实时观测</span>';
+  h += '  </div>';
+  h += '  <div class="decision-bullets">';
+
+  if(d.focus){
+    h += '    <div class="d-bullet">';
+    h += '      <span class="d-tag">市场状态</span>';
+    h += '      <div>' + esc(d.focus) + '</div>';
+    h += '    </div>';
+  }
+
+  if(m02.content || d.summary){
+    h += '    <div class="d-bullet">';
+    h += '      <span class="d-tag">个股表现</span>';
+    h += '      <div>' + esc(m02.impact ? m02.impact : d.summary) + '</div>';
+    h += '    </div>';
+  }
+
+  if(m03.content){
+    h += '    <div class="d-bullet alert">';
+    h += '      <span class="d-tag" style="color:var(--up)">ETF联动</span>';
+    h += '      <div>' + esc(m03.impact ? m03.impact : m03.content.substring(0, 110) + '...') + '</div>';
+    h += '    </div>';
+  }
+
+  h += '  </div>';
+  h += '</div>';
+
+  // 3. 全球核心指数看板 (多Tab切换)
+  var indices = d.broad_indices || [];
+  var aIndices = indices.filter(function(x){ return x.category === 'A股'; });
+  var hkIndices = indices.filter(function(x){ return x.category === '港股'; });
+  var apacIndices = indices.filter(function(x){ return x.category === '日韩'; });
+  var usIndices = indices.filter(function(x){ return x.category === '美股'; });
+  var futuresIndices = indices.filter(function(x){ return x.category === '期货/夜盘' || x.category === '期指'; });
+
+  h += '<div class="sec-head">';
+  h += '  <span>全球市场</span>';
+  h += '  <span>主要指数 · 分市场查看</span>';
+  h += '</div>';
+
+  h += '<div class="idx-tab-card">';
+  h += '  <div class="idx-tabs">';
+  h += '    <button class="idx-tab active" onclick="switchIdx(\'idx-ashare\')">A股</button>';
+  h += '    <button class="idx-tab" onclick="switchIdx(\'idx-hk\')">港股</button>';
+  h += '    <button class="idx-tab" onclick="switchIdx(\'idx-apac\')">日韩</button>';
+  h += '    <button class="idx-tab" onclick="switchIdx(\'idx-us\')">美股</button>';
+  h += '    <button class="idx-tab" onclick="switchIdx(\'idx-futures\')">期货 / 夜盘</button>';
+  h += '  </div>';
+
+  // Server-side snapshot states use actual observation time; never infer from task labels.
+  var marketStates = d.market_states || {};
+  function marketLabel(key){ return (marketStates[key] || {}).label || '交易状态待确认'; }
+  function marketClass(key){
+    var phase = (marketStates[key] || {}).phase;
+    if(['MORNING','AFTERNOON','REGULAR'].indexOf(phase) >= 0) return 'b-live';
+    if(['PRE_MARKET','POST_MARKET','AUCTION','BREAK'].indexOf(phase) >= 0) return 'b-pre';
+    return 'b-closed';
+  }
+  function quoteLabel(q){
+    var observed = Date.parse(d.observedAt || '');
+    var quoted = Date.parse(String(q.asof || '').replace(' CST', '+08:00').replace(' HKT', '+08:00').replace(' ', 'T'));
+    return isFinite(observed) && isFinite(quoted) && observed >= quoted && observed - quoted <= 900000 ? '近期报价' : '最近报价';
+  }
+  var aStatusText = esc(marketLabel('A'));
+  var aStatusCls = marketClass('A');
+  var hkStatusText = esc(marketLabel('HK'));
+  var hkStatusCls = marketClass('HK');
+  var apacStatusText = esc('韩国：' + marketLabel('KR') + ' / 日本：' + marketLabel('JP'));
+  var apacStatusCls = 'b-history';
+
+  // Pane A股
+  h += '  <div class="idx-pane active" id="idx-ashare">';
+  h += '    <div class="idx-pane-top">';
+  h += '      <span class="idx-pane-name">A 股核心基准指数</span>';
+  h += '      <span class="badge ' + aStatusCls + '">' + aStatusText + '</span>';
+  h += '    </div>';
+  h += '    <div class="idx-chips-grid">';
+  aIndices.forEach(function(idx){
+    h += '      <div class="t-chip"><div class="t-chip-left"><span class="t-chip-name">' + esc(idx.name) + '</span><span class="t-chip-price">' + esc(idx.price) + '</span></div><span class="badge ' + getChgTag(idx.chg) + '">' + esc(idx.chg) + '</span></div>';
+  });
+  h += '    </div>';
+  h += '  </div>';
+
+  // Pane 港股
+  h += '  <div class="idx-pane" id="idx-hk">';
+  h += '    <div class="idx-pane-top">';
+  h += '      <span class="idx-pane-name">港股基准指数</span>';
+  h += '      <span class="badge ' + hkStatusCls + '">' + hkStatusText + '</span>';
+  h += '    </div>';
+  h += '    <div class="idx-chips-grid">';
+  hkIndices.forEach(function(idx){
+    h += '      <div class="t-chip"><div class="t-chip-left"><span class="t-chip-name">' + esc(idx.name) + '</span><span class="t-chip-price">' + esc(idx.price) + '</span></div><span class="badge ' + getChgTag(idx.chg) + '">' + esc(idx.chg) + '</span></div>';
+  });
+  h += '    </div>';
+  h += '  </div>';
+
+  // Pane 日韩
+  h += '  <div class="idx-pane" id="idx-apac">';
+  h += '    <div class="idx-pane-top">';
+  h += '      <span class="idx-pane-name">日韩亚太核心指数</span>';
+  h += '      <span class="badge ' + apacStatusCls + '">' + apacStatusText + '</span>';
+  h += '    </div>';
+  h += '    <div class="idx-chips-grid">';
+  apacIndices.forEach(function(idx){
+    h += '      <div class="t-chip"><div class="t-chip-left"><span class="t-chip-name">' + esc(idx.name) + '</span><span class="t-chip-price">' + esc(idx.price) + '</span></div><span class="badge ' + getChgTag(idx.chg) + '">' + esc(idx.chg) + '</span></div>';
+  });
+  h += '    </div>';
+  h += '  </div>';
+
+  // Pane 美股 (纯指数)
+  var usBadgeText = esc(marketLabel('US'));
+  var usBadgeClass = marketClass('US');
+  h += '  <div class="idx-pane" id="idx-us">';
+  h += '    <div class="idx-pane-top">';
+  h += '      <span class="idx-pane-name">美股核心指数 (纯指数)</span>';
+  h += '      <span class="badge ' + usBadgeClass + '">' + usBadgeText + '</span>';
+  h += '    </div>';
+  h += '    <div class="idx-chips-grid">';
+  usIndices.forEach(function(idx){
+    h += '      <div class="t-chip"><div class="t-chip-left"><span class="t-chip-name">' + esc(idx.name) + '</span><span class="t-chip-price">' + esc(idx.price) + '</span></div><span class="badge ' + getChgTag(idx.chg) + '">' + esc(idx.chg) + '</span></div>';
+  });
+  h += '    </div>';
+  h += '  </div>';
+
+  // Pane 期货/夜盘
+  h += '  <div class="idx-pane" id="idx-futures">';
+  h += '    <div class="idx-pane-top">';
+  h += '      <span class="idx-pane-name">全球期指 / 夜盘大宗</span>';
+  h += '      <span class="badge b-history">' + esc(marketLabel('FUTURES')) + '</span>';
+  h += '    </div>';
+  h += '    <div class="idx-chips-grid">';
+  futuresIndices.forEach(function(idx){
+    h += '      <div class="t-chip"><div class="t-chip-left"><span class="t-chip-name">' + esc(idx.name) + '</span><span class="t-chip-price">' + esc(idx.price) + '</span></div><span class="badge ' + getChgTag(idx.chg) + '">' + esc(idx.chg) + '</span></div>';
+  });
+  h += '    </div>';
+  h += '  </div>';
+  h += '</div>';
+  h += '</div>';
+
+  // 4. 重点关注板块与核心个股异动 (100% 动态绑定真实持仓)
+  var ssList = d.stock_sectors || [];
+  var etfList = d.etf_holdings || [];
+  var quotesList = d.quotes || [];
+  var usMovers = d.us_pre_market || [];
+
+  function isEtfCode(code){
+    var raw = String(code || '').split('.')[0];
+    return /^(50|51|52|56|58|15|16|18)/.test(raw);
+  }
+  var heldStocks = quotesList.filter(function(q){ return !isEtfCode(q.code); });
+  var heldEtfs = quotesList.filter(function(q){ return isEtfCode(q.code); });
+
+  h += '<div class="sec-head">';
+  h += '  <span>板块与关联资产</span>';
+  h += '  <span>实时行情 · 基准联动</span>';
+  h += '</div>';
+
+  h += '<div class="focus-board">';
+  h += '  <div class="focus-sec-title">持仓关联赛道与基准表现</div>';
+  h += '  <div class="sector-pills">';
+
+  var seenSectors = {};
+  var sectorPillsHtml = '';
+  ssList.forEach(function(s){
+    var secKey = s.sector_code || s.sector_name;
+    if(secKey && !seenSectors[secKey]){
+      seenSectors[secKey] = true;
+      var label = (s.industry || s.sector_name || '');
+      sectorPillsHtml += '    <div class="sector-pill"><b>' + esc(label) + '</b> <span style="font-size:10px;color:var(--sub)">(' + esc(s.sector_name) + ')</span> <span class="badge ' + getChgTag(s.sector_chg) + '" style="margin-left:2px">' + esc(s.sector_chg) + '</span></div>';
+    }
+  });
+  etfList.forEach(function(etf){
+    if(etf.etf_code && !seenSectors[etf.etf_code]){
+      seenSectors[etf.etf_code] = true;
+      sectorPillsHtml += '    <div class="sector-pill"><b>' + esc(etf.etf_name) + ' (' + esc(etf.etf_code) + ')</b> <span class="badge ' + getChgTag(etf.etf_chg) + '" style="margin-left:2px">' + esc(etf.etf_chg) + '</span></div>';
+    }
+  });
+  if(!sectorPillsHtml){
+    quotesList.slice(0, 6).forEach(function(q){
+      sectorPillsHtml += '    <div class="sector-pill"><b>' + esc(q.name) + '</b> <span class="badge ' + getChgTag(q.chg) + '" style="margin-left:2px">' + esc(q.chg) + '</span></div>';
+    });
+  }
+  h += sectorPillsHtml;
+  h += '  </div>';
+
+  h += '  <div class="focus-sec-title" style="margin-top:4px">持仓与关联资产</div>';
+  h += '  <div class="stock-grid">';
+
+  var renderedCards = 0;
+  var ssByCode = {};
+  ssList.forEach(function(s){ ssByCode[s.stock_code] = s; });
+
+  // 4.1 优先展示用户实际持股
+  heldStocks.slice(0, 6).forEach(function(q){
+    var ss = ssByCode[q.code];
+    var subLeft = ss ? ('Alpha ' + esc(ss.alpha)) : ('现价 ' + esc(q.price));
+    var subStyle = ss ? ' style="color:var(--accent);font-weight:700"' : '';
+    var sessTag = quoteLabel(q);
+    h += '    <div class="s-mini-card"><div class="s-mini-top"><span class="s-mini-name">' + esc(q.name) + ' (' + esc(q.code) + ')</span><span class="badge ' + getChgTag(q.chg) + '">' + esc(q.chg) + '</span></div><div class="s-mini-bot"><span' + subStyle + '>' + subLeft + '</span><span class="badge b-closed">' + sessTag + '</span></div></div>';
+    renderedCards++;
+  });
+
+  // 4.2 展示用户实际持仓 ETF 及其关联重仓海外映射（仅当用户持有对应 ETF 时渲染）
+  var heldEtfCodes = {};
+  heldEtfs.forEach(function(e){ heldEtfCodes[String(e.code).split('.')[0]] = true; });
+  etfList.forEach(function(etf){
+    if(renderedCards >= 8) return;
+    h += '    <div class="s-mini-card"><div class="s-mini-top"><span class="s-mini-name">' + esc(etf.etf_name) + ' (' + esc(etf.etf_code) + ')</span><span class="badge ' + getChgTag(etf.etf_chg) + '">' + esc(etf.etf_chg) + '</span></div><div class="s-mini-bot"><span>场内 ' + esc(etf.etf_price) + '</span><span class="badge b-closed">持仓ETF</span></div></div>';
+    renderedCards++;
+    (etf.holdings || []).slice(0, 2).forEach(function(hld){
+      if(renderedCards >= 8) return;
+      var tag = hld.us_ticker ? ('[' + esc(hld.us_ticker) + ']') : esc(hld.code);
+      h += '    <div class="s-mini-card"><div class="s-mini-top"><span class="s-mini-name">' + esc(hld.name) + ' ' + tag + '</span><span class="badge ' + getChgTag(hld.chg) + '">' + esc(hld.chg) + '</span></div><div class="s-mini-bot"><span>' + esc(etf.etf_name) + ' 权重 ' + esc(hld.weight) + '</span><span class="badge ' + 'b-history' + '">' + quoteLabel(hld) + '</span></div></div>';
+      renderedCards++;
+    });
+  });
+
+  // 4.3 若有未被 etfList 覆盖的持仓 ETF，直接展示其行情卡片
+  var etfListCodes = {};
+  etfList.forEach(function(e){ etfListCodes[e.etf_code] = true; });
+  heldEtfs.forEach(function(q){
+    if(renderedCards >= 8 || etfListCodes[q.code]) return;
+    h += '    <div class="s-mini-card"><div class="s-mini-top"><span class="s-mini-name">' + esc(q.name) + ' (' + esc(q.code) + ')</span><span class="badge ' + getChgTag(q.chg) + '">' + esc(q.chg) + '</span></div><div class="s-mini-bot"><span>现价 ' + esc(q.price) + '</span><span class="badge b-closed">持仓ETF</span></div></div>';
+    renderedCards++;
+  });
+
+  // 4.4 仅在持仓涉及对应跨境ETF/美股，或总卡片不足3个时补充外盘核心风向标
+  var relevantUsSyms = {};
+  if(heldEtfCodes['513390'] || heldEtfCodes['513310']){
+    relevantUsSyms['NVDA'] = true; relevantUsSyms['AAPL'] = true; relevantUsSyms['MSFT'] = true;
+  }
+  if(heldEtfCodes['513050']){
+    relevantUsSyms['PDD'] = true; relevantUsSyms['KWEB'] = true;
+  }
+  heldStocks.forEach(function(q){
+    if(q.market === 'US' && q.code) relevantUsSyms[q.code] = true;
+  });
+  usMovers.forEach(function(m){
+    if(renderedCards >= 8) return;
+    if(relevantUsSyms[m.symbol]){
+      h += '    <div class="s-mini-card"><div class="s-mini-top"><span class="s-mini-name">' + esc(m.name) + ' (' + esc(m.symbol) + ')</span><span class="badge ' + getChgTag(m.chg) + '">' + esc(m.chg) + '</span></div><div class="s-mini-bot"><span>' + '最近报价 $' + esc(m.price) + '</span><span class="badge ' + 'b-history' + '">' + quoteLabel(m) + '</span></div></div>';
+      renderedCards++;
+    }
+  });
+
+  h += '  </div>';
+  h += '</div>';
+
+  // 5. 持仓全景透视 (Tab 切换卡片 - 动态数量与内容)
+  var covList = d.coverage || [];
+  var gapCovs = covList.filter(function(c){ return c.net === 'none'; });
+  var stockTabCount = ssList.length > 0 ? Math.max(ssList.length, heldStocks.length) : heldStocks.length;
+  var etfTabCount = Math.max(etfList.length, heldEtfs.length);
+  var defaultEtfActive = (stockTabCount === 0 && etfTabCount > 0);
+  var stockRowBadge = esc(marketLabel('A'));
+
+  h += '<div class="sec-head">';
+  h += '  <span>持仓分析</span>';
+  h += '  <span style="font-size:11px;color:var(--sub);font-weight:normal">有效覆盖 ' + esc(quotesList.length) + ' 只' + (gapCovs.length ? ' ｜ 缺失 ' + esc(gapCovs.length) + ' 只' : '') + '</span>';
+  h += '</div>';
+
+  if(gapCovs.length){
+    h += '<div class="d-bullet alert" style="margin-bottom:8px">';
+    h += '  <span class="d-tag" style="color:var(--up)">暂未获取/停牌 (' + esc(gapCovs.length) + '):</span>';
+    h += '  <div>' + gapCovs.map(function(g){ return esc(g.name || g.code) + ' (' + esc(g.code) + ')：' + esc(g.note || '未获取'); }).join('；') + '</div>';
+    h += '</div>';
+  }
+
+  h += '<div class="cockpit-card">';
+  h += '  <div class="cockpit-tabs">';
+  h += '    <button class="cockpit-tab' + (defaultEtfActive ? '' : ' active') + '" onclick="switchPortTab(\'tab-stocks\')">持仓核心个股 (' + stockTabCount + '只 · Alpha透视)</button>';
+  h += '    <button class="cockpit-tab' + (defaultEtfActive ? ' active' : '') + '" onclick="switchPortTab(\'tab-etfs\')">持仓 ETF 深度穿透 (' + etfTabCount + '只 · 权重映射)</button>';
+  h += '  </div>';
+
+  // Tab 1: 个股 Alpha 透视
+  h += '  <div class="cockpit-content" id="tab-stocks"' + (defaultEtfActive ? ' style="display:none"' : '') + '>';
+  if(ssList.length === 0 && heldStocks.length === 0){
+    h += '    <div class="stock-card-row"><div class="stock-hint">当前持仓组合未配置个股，全部为指数/行业 ETF 配置。</div></div>';
+  }else{
+    var renderedStockCodes = {};
+    ssList.forEach(function(s){
+      renderedStockCodes[s.stock_code] = true;
+      var alphaVal = s.alpha_val || 0;
+      var alphaBg = alphaVal > 0 ? 'var(--accentbg)' : 'var(--upbg)';
+      var alphaColor = alphaVal > 0 ? 'var(--accent)' : 'var(--up)';
+
+      h += '    <div class="stock-card-row">';
+      h += '      <div class="stock-line-1">';
+      h += '        <div><b>' + esc(s.stock_name) + '</b> <span class="code">' + esc(s.stock_code) + '</span> <span class="badge b-closed">' + stockRowBadge + '</span></div>';
+      h += '        <div><span class="price num">' + esc(s.stock_price) + '</span> <span class="badge ' + getChgTag(s.stock_chg) + '">' + esc(s.stock_chg) + '</span></div>';
+      h += '      </div>';
+      h += '      <div class="stock-line-2">';
+      h += '        <span>基准: ' + esc(s.sector_name) + ' (' + esc(s.sector_chg) + ')</span>';
+      h += '        <span class="badge" style="background:' + alphaBg + ';color:' + alphaColor + ';font-weight:700">超额 Alpha ' + esc(s.alpha) + '</span>';
+      h += '        <span>行业: ' + esc(s.industry) + '</span>';
+      h += '      </div>';
+      h += '      <div class="stock-hint"><b>研判定调:</b> ' + esc(s.linkage) + '</div>';
+      h += '    </div>';
+    });
+    heldStocks.forEach(function(q){
+      if(renderedStockCodes[q.code]) return;
+      h += '    <div class="stock-card-row">';
+      h += '      <div class="stock-line-1">';
+      h += '        <div><b>' + esc(q.name) + '</b> <span class="code">' + esc(q.code) + '</span> <span class="badge b-closed">' + esc(q.market || stockRowBadge) + '</span></div>';
+      h += '        <div><span class="price num">' + esc(q.price) + '</span> <span class="badge ' + getChgTag(q.chg) + '">' + esc(q.chg) + '</span></div>';
+      h += '      </div>';
+      h += '      <div class="stock-line-2"><span>来源: ' + esc(q.src || '实时行情') + '</span><span>时点: ' + esc(q.asof || '') + '</span></div>';
+      h += '    </div>';
+    });
+  }
+  h += '  </div>';
+
+  // Tab 2: ETF 重仓穿透 + 未映射ETF基础行情
+  h += '  <div class="cockpit-content" id="tab-etfs"' + (defaultEtfActive ? '' : ' style="display:none"') + '>';
+  if(etfList.length === 0 && heldEtfs.length === 0){
+    h += '    <div class="etf-block"><div class="etf-driving">当前持仓组合未配置 ETF 基金。</div></div>';
+  }else{
+    var renderedEtfCodes = {};
+    etfList.forEach(function(etf){
+      renderedEtfCodes[etf.etf_code] = true;
+      h += '    <div class="etf-block">';
+      h += '      <div class="etf-top">';
+      h += '        <span class="etf-title">' + esc(etf.etf_name) + ' (' + esc(etf.etf_code) + ') <span class="badge ' + getChgTag(etf.etf_chg) + '">' + esc(etf.etf_price) + ' (' + esc(etf.etf_chg) + ')</span></span>';
+      h += '        <span class="badge b-closed">场内ETF</span>';
+      h += '      </div>';
+      h += '      <div class="etf-driving"><b>驱动归因：</b>' + esc(etf.driving) + '</div>';
+      h += '      <div class="etf-chips">';
+      (etf.holdings || []).forEach(function(hld){
+        var usTickerBadge = hld.us_ticker ? ' <span style="font-size:9.5px;color:var(--accent)">[' + esc(hld.us_ticker) + ']</span>' : '';
+        h += '        <span class="holding-chip"><b>' + esc(hld.name) + '</b>' + usTickerBadge + ' ' + esc(hld.weight) + ' <span class="badge ' + getChgTag(hld.chg) + '">' + esc(hld.chg) + '</span></span>';
+      });
+      h += '      </div>';
+      h += '    </div>';
+    });
+    heldEtfs.forEach(function(q){
+      var rawEtfCode = String(q.code || '').split('.')[0];
+      if(renderedEtfCodes[q.code] || renderedEtfCodes[rawEtfCode]) return;
+      h += '    <div class="etf-block">';
+      h += '      <div class="etf-top">';
+      h += '        <span class="etf-title">' + esc(q.name) + ' (' + esc(q.code) + ') <span class="badge ' + getChgTag(q.chg) + '">' + esc(q.price) + ' (' + esc(q.chg) + ')</span></span>';
+      h += '        <span class="badge b-closed">场内ETF</span>';
+      h += '      </div>';
+      h += '      <div class="etf-driving"><b>驱动归因：</b>实时量价跟踪中（暂无预置重仓权重明细）</div>';
+      h += '    </div>';
+    });
+  }
+  h += '  </div>';
+  h += '</div>';
+
+  // 6. 影响市场的重大消息 (精选高信号, 不求全而求精)
+  h += '<div class="sec-head">';
+  h += '  <span>市场要闻</span>';
+  h += '  <span>精选解读</span>';
+  h += '</div>';
+
+  h += '<div class="major-news-list">';
+  if(!msgs.length){
+    h += '  <div class="news-item"><div class="news-body">当前时段无异常重大要闻。</div></div>';
+  }else{
+    msgs.forEach(function(m, idx){
+      var impactClass = (m.dir === 'up' || m.strength === '强') ? 'impact-high' : 'impact-med';
+      var safeUrl = (m.url && /^https?:\/\//i.test(m.url)) ? esc(m.url) : '';
+
+      var linkHtml = safeUrl ? ' ｜ <a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">信源↗</a>' : '';
+
+      h += '  <div class="news-item ' + impactClass + '">';
+      h += '    <div class="news-top">';
+      h += '      <span class="news-title">' + esc(m.codes || '核心要闻') + ' ｜ ' + esc(m.nature || '研判推演') + '</span>';
+      h += '      <span class="news-meta">' + esc(m.time || '') + ' ｜ ' + esc(m.source || '官方数据') + linkHtml + '</span>';
+      h += '    </div>';
+      var fullContent = String(m.content || '');
+      if(fullContent.length > 140){
+        var preview = m.id === 'M04' ? fullContent.replace(/\s+/g, ' ').trim() : '查看完整分析依据、关联行情与传导说明';
+        if(preview.length > 110) preview = preview.substring(0, 110).replace(/[，、；：\s]+$/, '') + '…';
+        h += '    <details class="news-detail">';
+        h += '      <summary><span class="news-preview">' + esc(preview) + '</span><span class="news-detail-toggle"><span class="news-detail-toggle-open">展开全文</span><span class="news-detail-toggle-close">收起全文</span></span></summary>';
+        h += '      <div class="news-detail-content"><div class="news-body">' + esc(fullContent) + '</div>';
+        if(m.chain){
+          h += '        <div class="chain-inline"><span>传导链：' + esc(m.chain) + '</span></div>';
+        }
+        h += '      </div>';
+        h += '    </details>';
+      }else{
+        h += '    <div class="news-body">' + esc(fullContent) + '</div>';
+        if(m.chain){
+          h += '    <div class="chain-inline"><span>传导链：' + esc(m.chain) + '</span></div>';
+        }
+      }
+      if(m.impact){
+        h += '    <div class="news-impact"><b class="news-impact-label">A股影响</b><span class="news-impact-text">' + esc(m.impact) + '</span></div>';
+      }
+      h += '  </div>';
+    });
+  }
+  h += '</div>';
+
+  // 6.1 可折叠 7x24 实时要闻明细（全量溯源）
+  var liveNews = d.news || [];
+  if(liveNews.length){
+    h += '<details style="margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px">';
+    h += '  <summary class="live-news-toggle" style="font-size:12px;font-weight:700;color:var(--ink)">7x24 实时快讯原始流溯源（共 ' + esc(liveNews.length) + ' 条，点击展开）</summary>';
+    h += '  <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">';
+    liveNews.forEach(function(n){
+      var nUrl = (n.url && /^https?:\/\//i.test(n.url)) ? esc(n.url) : '';
+      var nTag = n.codes ? ' <span class="badge tag-neu">' + esc(n.codes) + '</span>' : '';
+      h += '    <div style="font-size:12px;line-height:1.5;padding:7px 8px;background:var(--card-subtle);border-radius:var(--radius-sm)">';
+      h += '      <div style="display:flex;justify-content:space-between;gap:6px;margin-bottom:2px;color:var(--sub);font-size:11px"><span>[' + esc(n.time || '') + '] ' + esc(n.source || '') + nTag + '</span>' + (nUrl ? '<a href="' + nUrl + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">原文↗</a>' : '') + '</div>';
+      h += '      <div>' + esc(n.content || '') + '</div>';
+      h += '    </div>';
+    });
+    h += '  </div>';
+    h += '</details>';
+  }else{
+    h += '<div style="margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--sub)">7x24 实时快讯原始流溯源：本时段无增量直接快讯，已切换为纯盘面量价与外盘估值跟踪模式。</div>';
+  }
+
+  // 7. 尾部声明与免责
+  h += '<div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--sub);text-align:center">';
+  h += '  财经快讯 · 实时行情与公开信息整理 ｜ 仅供投研参考，不构成投资建议。';
+  h += '</div>';
+
+  document.getElementById('app').innerHTML = h;
+
+  // 全局交互函数绑定
+  window.switchIdx = function(paneId){
+    var panes = document.querySelectorAll('.idx-pane');
+    panes.forEach(function(p){ p.classList.remove('active'); });
+    var target = document.getElementById(paneId);
+    if(target) target.classList.add('active');
+
+    var tabs = document.querySelectorAll('.idx-tab');
+    tabs.forEach(function(t){ t.classList.remove('active'); });
+    if(window.event && window.event.currentTarget){
+      window.event.currentTarget.classList.add('active');
+    }
+  };
+
+  window.switchPortTab = function(tabId){
+    var sTab = document.getElementById('tab-stocks');
+    var eTab = document.getElementById('tab-etfs');
+    if(sTab) sTab.style.display = (tabId === 'tab-stocks' ? 'block' : 'none');
+    if(eTab) eTab.style.display = (tabId === 'tab-etfs' ? 'block' : 'none');
+    var tabs = document.querySelectorAll('.cockpit-tab');
+    if(tabs.length >= 2){
+      tabs[0].classList.toggle('active', tabId === 'tab-stocks');
+      tabs[1].classList.toggle('active', tabId === 'tab-etfs');
+    }
+  };
+
+  window.copyBrief = function(){
+    var txt = '【财经快讯 · 盯盘与预测 (' + (d.node || '') + ' ' + (d.period || '') + ')】\n';
+    if(d.focus) txt += '核心定调：' + d.focus + '\n';
+    if(d.summary) txt += '态势归因：' + d.summary + '\n';
+    txt += '----------------------------\n';
+    (d.messages || []).forEach(function(m){
+      txt += '• [' + (m.codes || '要闻') + '] ' + (m.impact || m.content) + '\n';
+    });
+    txt += '----------------------------\n公网研报：https://pages.242556.xyz/\n以上为公开信息汇总，仅供参考。';
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        var btn = document.getElementById('btn-copy');
+        if(btn){
+          btn.innerHTML = copiedIcon;
+          btn.setAttribute('aria-label', '已复制');
+          btn.title = '已复制';
+          clearTimeout(copyResetTimer);
+          copyResetTimer = setTimeout(function(){
+            btn.innerHTML = copyIcon;
+            btn.setAttribute('aria-label', '复制速报');
+            btn.title = '复制速报';
+          }, 2000);
+        }
+      });
+    }else{
+      alert('已生成速报文本：\n\n' + txt);
+    }
+  };
+})();
+</script>
+</body>
+</html>
